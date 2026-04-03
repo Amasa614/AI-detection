@@ -421,7 +421,7 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
               <div style="font-size:11px;font-weight:500;color:var(--muted);font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px">Local Binoculars</div>
 
               <label class="label" style="margin-bottom:6px">Backend URL</label>
-              <input type="text" id="binoBackendUrl" value="" placeholder="https://your-endpoint.endpoints.huggingface.cloud" style="width:100%;font-family:var(--mono);font-size:12px;padding:9px 12px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text);outline:none;margin-bottom:14px">
+              <input type="text" id="binoBackendUrl" value="" placeholder="https://your-backend.onrender.com" style="width:100%;font-family:var(--mono);font-size:12px;padding:9px 12px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text);outline:none;margin-bottom:14px">
 
               <div id="gptBinoStatus" style="display:none;font-size:11px;font-family:var(--mono);padding:10px 12px;border-radius:4px;margin-bottom:12px;line-height:1.6"></div>
 
@@ -473,7 +473,7 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
               <button class="btn-primary" id="gptBinoBtn" onclick="runGptBinoculars()" style="width:100%" disabled>
                 Analyse essay first
               </button>
-              <div id="binoBackendHint" style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:7px;text-align:center">set this to your deployed Hugging Face endpoint, or leave blank to use localhost while developing</div>
+              <div id="binoBackendHint" style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:7px;text-align:center">set this to your deployed backend, or leave blank to use localhost while developing</div>
             </div>
           </div>
 
@@ -834,8 +834,8 @@ function syncBinoBackendUi() {
   hint.textContent = effectiveUrl
     ? (isLocal
         ? 'using localhost for local development'
-        : 'using the configured deployed endpoint')
-    : 'enter your deployed Hugging Face endpoint URL, or leave blank to use localhost while developing';
+        : 'using the configured deployed backend')
+    : 'enter your deployed backend URL, or leave blank to use localhost while developing';
 }
 
 function getBinoBackendBaseUrl() {

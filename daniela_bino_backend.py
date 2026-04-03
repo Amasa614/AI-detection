@@ -12,26 +12,13 @@ from pydantic import BaseModel, Field
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-def env_flag(name: str, default: str = "false") -> bool:
-    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
-
-
-DEFAULT_OBSERVER_MODEL = (
-    os.getenv("BINO_OBSERVER_MODEL_PATH")
-    or os.getenv("BINO_OBSERVER_MODEL")
-    or "Qwen/Qwen2.5-0.5B-Instruct"
-)
-DEFAULT_PERFORMER_MODEL = (
-    os.getenv("BINO_PERFORMER_MODEL_PATH")
-    or os.getenv("BINO_PERFORMER_MODEL")
-    or "Qwen/Qwen2.5-0.5B"
-)
+DEFAULT_OBSERVER_MODEL = os.getenv("BINO_OBSERVER_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
+DEFAULT_PERFORMER_MODEL = os.getenv("BINO_PERFORMER_MODEL", "Qwen/Qwen2.5-0.5B")
 DEFAULT_THRESHOLD = float(os.getenv("BINO_THRESHOLD", "0.9"))
 DEFAULT_MAX_LENGTH = int(os.getenv("BINO_MAX_LENGTH", "256"))
 DEFAULT_BATCH_SIZE = int(os.getenv("BINO_BATCH_SIZE", "2"))
 SENTENCE_MIN_WORDS = int(os.getenv("BINO_MIN_SENTENCE_WORDS", "5"))
 CORS_ORIGINS = [origin.strip() for origin in os.getenv("BINO_CORS_ORIGINS", "*").split(",") if origin.strip()]
-PRELOAD_MODELS = env_flag("BINO_PRELOAD_MODELS")
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
 
 
@@ -84,7 +71,6 @@ class ModelStore:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._models: LoadedModels | None = None
-        self._load_error: str | None = None
 
     def get(self) -> LoadedModels:
         if self._models is not None:
@@ -133,18 +119,7 @@ class ModelStore:
                 device=device,
                 dtype=str(dtype).replace("torch.", ""),
             )
-            self._load_error = None
             return self._models
-
-    def preload(self) -> None:
-        try:
-            self.get()
-        except Exception as exc:
-            self._load_error = str(exc)
-
-    @property
-    def load_error(self) -> str | None:
-        return self._load_error
 
 
 store = ModelStore()
@@ -155,14 +130,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def preload_models_on_startup() -> None:
-    # Optional eager loading is useful on managed endpoints where readiness matters
-    # more than minimizing cold-start boot time.
-    if PRELOAD_MODELS:
-        store.preload()
 
 
 def score_batch(bundle: LoadedModels, sentences: List[str], max_length: int) -> List[dict]:
@@ -240,16 +207,9 @@ def root() -> dict:
 @app.get("/health")
 def health() -> dict:
     loaded = store._models is not None
-    status = "ok"
-    if store.load_error:
-        status = "error"
-    elif PRELOAD_MODELS and not loaded:
-        status = "loading"
     payload = {
-        "status": status,
+        "status": "ok",
         "loaded": loaded,
-        "preload_models": PRELOAD_MODELS,
-        "load_error": store.load_error,
         "cors_origins": CORS_ORIGINS or ["*"],
         "observer_model": DEFAULT_OBSERVER_MODEL,
         "performer_model": DEFAULT_PERFORMER_MODEL,
