@@ -1,1 +1,3 @@
-window.BINO_BACKEND_URL = 'https://ai-detection-08k7.onrender.com';
+// Set this to your Hugging Face Inference Endpoint URL before deploying the frontend.
+// Example: https://your-endpoint.endpoints.huggingface.cloud
+window.BINO_BACKEND_URL = '';
