@@ -193,6 +193,17 @@ def verdict_for(score: float) -> str:
     return "human"
 
 
+@app.get("/")
+def root() -> dict:
+    return {
+        "status": "ok",
+        "message": "Daniela Binoculars backend is running.",
+        "health_url": "/health",
+        "docs_url": "/docs",
+        "score_url": "/score",
+    }
+
+
 @app.get("/health")
 def health() -> dict:
     loaded = store._models is not None
