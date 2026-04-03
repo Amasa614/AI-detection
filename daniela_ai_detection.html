@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daniela's AI Detection Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface2: #f2f1ee;
+  --border: #e0deda;
+  --border2: #ccc9c3;
+  --text: #1a1917;
+  --muted: #78746d;
+  --dim: #b0ada6;
+  --green: #1a7a3c;
+  --green-bg: #edf7f1;
+  --green-border: #b6e0c6;
+  --amber: #92600a;
+  --amber-bg: #fef8ed;
+  --amber-border: #f5d98a;
+  --red: #b42218;
+  --red-bg: #fdf2f1;
+  --red-border: #f5bfbb;
+  --blue: #1a56a0;
+  --blue-bg: #eef4fc;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+.header { border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; gap: 20px; background: var(--surface); }
+.header-logo { width: 8px; height: 8px; border-radius: 50%; background: var(--text); }
+.header-title { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; color: var(--text); }
+.header-sub { font-size: 12px; color: var(--muted); margin-left: auto; font-family: var(--mono); }
+
+.main { max-width: 1120px; margin: 0 auto; padding: 32px; }
+
+.label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; display: block; }
+
+textarea {
+  width: 100%; min-height: 200px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text);
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.75;
+  padding: 16px; resize: vertical; outline: none; transition: border-color .15s;
+}
+textarea:focus { border-color: var(--text); }
+textarea::placeholder { color: var(--dim); }
+
+.btn-row { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; padding: 10px 22px; border-radius: 5px; cursor: pointer; border: none; transition: all .15s; }
+.btn-primary { background: var(--text); color: #fff; }
+.btn-primary:hover { background: #333; }
+.btn-primary:disabled { background: var(--border2); color: var(--dim); cursor: not-allowed; }
+.btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border2); }
+.btn-secondary:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+
+.progress { display: none; font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 12px; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; }
+
+.results { display: none; margin-top: 28px; }
+
+.verdict-bar { padding: 20px 24px; border-radius: 8px; border: 1px solid; margin-bottom: 24px; display: flex; align-items: center; gap: 24px; }
+.verdict-bar.pass { background: var(--green-bg); border-color: var(--green-border); }
+.verdict-bar.amber { background: var(--amber-bg); border-color: var(--amber-border); }
+.verdict-bar.fail { background: var(--red-bg); border-color: var(--red-border); }
+.verdict-pct { font-family: var(--mono); font-size: 40px; font-weight: 500; line-height: 1; flex-shrink: 0; }
+.verdict-pct.pass { color: var(--green); }
+.verdict-pct.amber { color: var(--amber); }
+.verdict-pct.fail { color: var(--red); }
+.verdict-label { font-size: 11px; color: var(--muted); margin-top: 5px; font-family: var(--mono); }
+
+.grid4 { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-bottom: 24px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-bottom: 20px; }
+
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 16px 18px; }
+.metric-val { font-family: var(--mono); font-size: 24px; font-weight: 500; margin-bottom: 2px; }
+.metric-val.pass { color: var(--green); }
+.metric-val.amber { color: var(--amber); }
+.metric-val.fail { color: var(--red); }
+.metric-name { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 2px; }
+.metric-note { font-size: 11px; color: var(--dim); }
+
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; overflow: hidden; margin-bottom: 16px; }
+.panel-header { padding: 11px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; }
+.panel-body { padding: 16px; }
+
+/* ── THRESHOLD BAR ────────────────────────────────────────────────────── */
+.tbar-wrap { margin-bottom: 10px; }
+.tbar-label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+.tbar-name { font-size: 12px; color: var(--text); }
+.tbar-val-row { display: flex; align-items: center; gap: 8px; }
+.tbar-val { font-family: var(--mono); font-size: 12px; font-weight: 500; min-width: 48px; }
+.tbar-interp { font-size: 11px; padding: 1px 7px; border-radius: 3px; font-family: var(--mono); flex-shrink: 0; }
+.tbar-interp.pass { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.tbar-interp.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.tbar-interp.fail { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+
+.tbar-track { position: relative; height: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; overflow: visible; }
+.tbar-zone-human { position: absolute; height: 100%; background: #dcf0e5; border-radius: 4px 0 0 4px; }
+.tbar-zone-amber { position: absolute; height: 100%; background: #fdefc8; }
+.tbar-zone-ai { position: absolute; height: 100%; background: #fad8d6; border-radius: 0 4px 4px 0; }
+.tbar-needle { position: absolute; top: -3px; width: 2px; height: 14px; background: var(--text); border-radius: 1px; transform: translateX(-50%); z-index: 2; }
+.tbar-needle::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid var(--text); }
+.tbar-tick { position: absolute; top: 10px; font-family: var(--mono); font-size: 9px; color: var(--dim); transform: translateX(-50%); white-space: nowrap; }
+.tbar-range-label { display: flex; justify-content: space-between; margin-top: 14px; font-family: var(--mono); font-size: 9px; color: var(--dim); }
+
+/* ── SENTENCE SCORES ──────────────────────────────────────────────────── */
+.sent-item { padding: 9px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 100px 1fr; gap: 12px; align-items: start; }
+.sent-item:last-child { border: none; }
+.sent-score-wrap { display: flex; flex-direction: column; gap: 3px; }
+.sent-score { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+.sent-badge { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-family: var(--mono); display: inline-block; width: fit-content; }
+.sent-badge.pass { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.sent-badge.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.sent-badge.fail { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.sent-text { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+/* ── BINO LEGEND ──────────────────────────────────────────────────────── */
+.bino-legend { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; }
+.bino-legend-title { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+.bino-scale { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(to right, #b42218 0%, #f5bfbb 20%, #fdefc8 35%, #dcf0e5 55%, #1a7a3c 100%); margin-bottom: 18px; border: 1px solid var(--border); }
+.bino-tick { position: absolute; top: 12px; font-family: var(--mono); font-size: 9px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.bino-zone-label { position: absolute; top: -18px; font-family: var(--mono); font-size: 9px; font-weight: 500; }
+.legend-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; }
+.legend-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── WINDOWS ──────────────────────────────────────────────────────────── */
+.window-grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.win-dot { width: 11px; height: 11px; border-radius: 2px; cursor: default; position: relative; }
+.win-dot:hover::after { content: attr(data-tip); position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 10px; font-family: var(--mono); padding: 4px 8px; border-radius: 3px; white-space: nowrap; z-index: 10; pointer-events: none; }
+
+/* ── RUN VISUAL ───────────────────────────────────────────────────────── */
+.run-visual { display: flex; flex-wrap: wrap; gap: 3px; }
+.run-dot { width: 9px; height: 9px; border-radius: 2px; }
+.run-legend { display: flex; gap: 14px; margin-top: 10px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+/* ── NEXT STEPS ───────────────────────────────────────────────────────── */
+.step { display: grid; grid-template-columns: 32px 1fr; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); align-items: start; }
+.step:last-child { border: none; }
+.step-num { width: 28px; height: 28px; border-radius: 50%; font-family: var(--mono); font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-num.high { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.step-num.med { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.step-num.low { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.step-title { font-size: 13px; font-weight: 500; margin-bottom: 5px; color: var(--text); }
+.step-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+.step-quote { font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--surface2); border-left: 2px solid var(--border2); padding: 8px 12px; border-radius: 0 4px 4px 0; }
+
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.stat-row:last-child { border: none; }
+.stat-k { font-size: 12px; color: var(--muted); }
+.stat-v { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+
+.section-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 12px; margin-top: 28px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+.badge { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 500; }
+.badge.pass { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.badge.fail { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.badge.na { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+.error-msg { display: none; font-family: var(--mono); font-size: 12px; color: var(--red); margin-top: 10px; }
+
+.local-bino-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(420px, 560px); gap: 28px; align-items: start; }
+.local-bino-sidecard { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 18px; position: sticky; top: 24px; }
+.local-bino-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.local-bino-metric { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 12px; }
+.local-bino-sentence-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 5px; }
+
+@media (max-width: 980px) {
+  .local-bino-layout { grid-template-columns: 1fr; }
+  .local-bino-sidecard { position: static; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo"></div>
+  <div>
+    <div class="header-title">DANIELA'S AI DETECTION PLATFORM</div>
+    <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:2px">built to help Daniela with her assignments</div>
+  </div>
+  <div class="header-sub">6-mechanism Turnitin analysis</div>
+</div>
+
+<div class="main">
+
+  <div style="margin-bottom:24px">
+    <label class="label">Paste essay text</label>
+    <textarea id="essayInput" placeholder="Paste the full essay here. Minimum 200 words for reliable analysis..."></textarea>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="btn-row">
+      <button class="btn-primary" id="analyseBtn" onclick="runAnalysis()">Analyse essay</button>
+      <button class="btn-secondary" onclick="clearAll()">Clear</button>
+    </div>
+    <div class="progress" id="progress">Initialising...</div>
+  </div>
+
+  <div class="results" id="results">
+
+    <!-- VERDICT -->
+    <div class="verdict-bar" id="verdictBar">
+      <div class="verdict-pct" id="verdictPct"></div>
+      <div>
+        <div id="verdictText" style="font-size:15px;font-weight:500;margin-bottom:4px"></div>
+        <div class="verdict-label" id="verdictSub"></div>
+      </div>
+    </div>
+
+    <!-- TOP 4 METRICS -->
+    <div class="grid4" id="topMetrics"></div>
+
+    <!-- BINO LEGEND -->
+    <div class="section-title">How to read bino scores</div>
+    <div class="bino-legend">
+      <div class="bino-legend-title">Bino score scale — what each range means</div>
+      <div style="position:relative;margin-bottom:28px">
+        <div class="bino-scale"></div>
+        <div class="bino-tick" style="left:0%">−5.5+</div>
+        <div class="bino-tick" style="left:20%">−4.6</div>
+        <div class="bino-tick" style="left:37%">−4.45</div>
+        <div class="bino-tick" style="left:57%">−4.2</div>
+        <div class="bino-tick" style="left:100%">−3.5</div>
+      </div>
+      <div class="legend-rows">
+        <div class="legend-row"><div class="legend-dot" style="background:var(--red)"></div><span><strong>Below −4.6:</strong> Deep AI signal. Sentence is very predictable — typical of AI-generated text. Fix these first.</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#d97c00"></div><span><strong>−4.6 to −4.45:</strong> AI zone. Below Turnitin's threshold. Will contribute to flagging.</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#92a800"></div><span><strong>−4.45 to −4.2:</strong> Marginal. Just above threshold. Acceptable but worth watching in clusters.</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--green)"></div><span><strong>Above −4.2:</strong> Human range. Good variation, unexpected phrasing, personal voice. Target for all sentences.</span></div>
+      </div>
+    </div>
+
+    <!-- METRICS EXPLAINER -->
+    <div class="section-title">What the evaluation metrics mean</div>
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-body">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:0">
+
+          <!-- LEFT COLUMN -->
+          <div style="padding-right:24px;border-right:1px solid var(--border)">
+
+            <div style="font-size:11px;font-weight:500;color:var(--muted);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)">The 6 Turnitin mechanisms</div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">M1 — Transformer model proxy (bino score)</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Turnitin uses a fine-tuned AI model to decide whether each sentence reads as human or machine-generated. We approximate this using the <strong>bino score</strong>: the ratio of how surprising each word is under a precise model versus a loose one. The more predictable the word choices, the more negative the score. Threshold: scores below <span style="font-family:var(--mono);font-size:11px;background:var(--red-bg);color:var(--red);padding:1px 5px;border-radius:3px">−4.45</span> are flagged as AI. Human writing typically sits between <span style="font-family:var(--mono);font-size:11px">−4.2</span> and <span style="font-family:var(--mono);font-size:11px">−3.5</span>.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">M2 — Overlapping window analysis</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Turnitin doesn't just score sentences individually — it scores them in overlapping groups of 6 (sliding windows). A window is flagged when its <em>average</em> bino score drops below −4.45. This catches AI text that is embedded within otherwise human text. Even if no single sentence fails, a cluster of borderline sentences in a row will flag a window.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">M3 — Sentence aggregation (consecutive runs)</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">When 4 or more sentences in a row all score below −4.35, Turnitin's aggregation mechanism activates. This is the most reliable way it detects AI writing — not one bad sentence, but a sustained stretch of uniformly predictable text. A run of 4+ is the single highest-risk pattern to have in your essay.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">M4 — Long-form prose requirement</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Turnitin only scores qualifying long-form prose: full sentences inside paragraphs. It ignores bullet points, reference lists, headers, and short fragments. This tool does the same — only sentences of 5+ words inside paragraphs are included in the analysis.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">M5 — Paraphrase / spinner detection</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Turnitin also flags text that was AI-generated and then paraphrased through a spinning tool. The fingerprint is a preserved grammatical skeleton (high function-word ratio) combined with unusual content words swapped in. This tool checks for this pattern and flags any sentences that match it.</div>
+            </div>
+
+            <div style="margin-bottom:0">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">M6 — Multilingual model</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Turnitin detects the language and routes text to a language-specific model. For English academic prose it uses the English model. British spelling matters: "organisation" not "organization", "centred" not "centered". American spellings in British-English assignments are themselves a signal. This tool checks for em dashes, which are one of the strongest individual AI signals regardless of language.</div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div style="padding-left:24px">
+
+            <div style="font-size:11px;font-weight:500;color:var(--muted);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)">The 5 linguistic families</div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">Family 1 — Surface &amp; stylometric</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Low-level writing patterns: how many unique words you use (MATTR), how often you use "I", how much sentence length varies (CV), punctuation density, reading level. AI writing tends to have uniform sentence lengths, low first-person usage, and slightly elevated vocabulary complexity. <strong>Em dashes</strong> are the single most reliable surface signal — remove every one.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">Family 2 — Discourse &amp; pragmatic</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">How claims are framed and how the text guides the reader. <strong>Hedges</strong> ("tends to", "often", "may") signal a human acknowledging uncertainty. <strong>Boosters</strong> ("clearly", "certainly", "crucial") are overused by AI. <strong>Stance markers</strong> ("I think", "In my view") show personal judgement. AI writing typically lacks these or uses them formulaically.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">Family 3 — Epistemic &amp; content</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Whether the text sounds grounded in genuine knowledge and experience. <strong>Named entities</strong> (real people, places, institutions) signal that a human who knows the subject wrote this. <strong>Personal experience markers</strong> ("I have come across", "what I kept noticing") are very difficult for AI to fake convincingly. <strong>Citations</strong> show engagement with actual sources.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">Family 4 — Predictability &amp; probabilistic</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6"><strong>Perplexity</strong> measures how surprised a language model is by each sentence — high perplexity means the words are hard to predict, which is a human signal. <strong>Perplexity stdev</strong> measures whether the essay has varied difficulty: human writing naturally spikes between simple and complex sentences. <strong>Top-1 bigram rate</strong> measures how often each word is the single most likely next word — high rates indicate formulaic phrasing.</div>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">Family 5 — Provenance</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6">Origin verification — whether the text carries a watermark or fingerprint left by the generator. This tool cannot check Turnitin's watermark database, but it does check for paraphrase/spinner fingerprints (M5 above). Essays written and edited manually have no generator signature.</div>
+            </div>
+
+            <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:12px 14px">
+              <div style="font-size:11px;font-weight:500;color:var(--amber);font-family:var(--mono);margin-bottom:6px;letter-spacing:.04em">IMPORTANT — self-referential scoring note</div>
+              <div style="font-size:11px;color:var(--amber);line-height:1.6">This tool builds its language model from the essay you paste. This means sentences score better against it than they would against Turnitin's external model trained on millions of documents. <strong>If this tool flags something, Turnitin almost certainly flags it too.</strong> Use the results as a minimum baseline — the real score is likely slightly higher.</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- M1 + M2 -->
+    <div class="section-title">Mechanism 1 — transformer proxy & mechanism 2 — overlapping windows</div>
+    <div class="grid2">
+      <div>
+        <div class="panel">
+          <div class="panel-header"><span>Bino score per sentence</span><span id="m1badge"></span></div>
+          <div class="panel-body" id="sentScores" style="max-height:380px;overflow-y:auto"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-header"><span>6-sentence sliding windows</span><span id="m2badge"></span></div>
+          <div class="panel-body">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Each dot = one 6-sentence window. A window is flagged (red) when its average bino score drops below −4.45. Too many flagged windows = sustained AI pattern that Turnitin's aggregation catches.</div>
+            <div class="window-grid" id="windowGrid"></div>
+            <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--muted);font-family:var(--mono)">
+              <span><span style="display:inline-block;width:9px;height:9px;background:var(--green);border-radius:2px;margin-right:4px;vertical-align:middle"></span>human (&gt;−4.35)</span>
+              <span><span style="display:inline-block;width:9px;height:9px;background:#d4a017;border-radius:2px;margin-right:4px;vertical-align:middle"></span>marginal</span>
+              <span><span style="display:inline-block;width:9px;height:9px;background:var(--red);border-radius:2px;margin-right:4px;vertical-align:middle"></span>AI-flagged (&lt;−4.45)</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:0">
+          <div class="panel-header"><span>Mechanism 3 — consecutive AI-sentence runs</span><span id="m3badge"></span></div>
+          <div class="panel-body">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Turnitin's aggregation triggers when 4+ sentences in a row all score below −4.35. Red dots = AI-like sentences. A solid red block of 4+ is the highest-risk pattern.</div>
+            <div class="run-visual" id="runVisual"></div>
+            <div class="run-legend">
+              <span><span style="display:inline-block;width:9px;height:9px;background:var(--red);border-radius:2px;margin-right:4px;vertical-align:middle"></span>AI-like (&lt;−4.35)</span>
+              <span><span style="display:inline-block;width:9px;height:9px;background:var(--border2);border-radius:2px;margin-right:4px;vertical-align:middle"></span>human range</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:10px" id="runDesc"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5-FAMILY WITH THRESHOLD BARS -->
+    <div class="section-title">5-family linguistic analysis — with human thresholds</div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-header">Family 1 — surface & stylometric</div>
+        <div class="panel-body" id="f1bars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Family 2 — discourse & pragmatic</div>
+        <div class="panel-body" id="f2bars"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-header">Family 3 — epistemic & content</div>
+        <div class="panel-body" id="f3bars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Family 4 — predictability & probabilistic</div>
+        <div class="panel-body" id="f4bars"></div>
+      </div>
+    </div>
+
+    <!-- NEXT STEPS -->
+    <div class="section-title">Prioritised next steps</div>
+    <div class="panel">
+      <div class="panel-body" id="nextSteps"></div>
+    </div>
+
+    <!-- LOCAL BINOCULARS -->
+    <div class="section-title">Local binoculars score — open models backend</div>
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-body">
+        <div class="local-bino-layout">
+
+          <div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:6px">How this works</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">This section calls a Python backend that runs two open-weight language models with the same tokenizer and reads their full next-token distributions. That means the score is much closer to the real Binoculars math than the old browser-only API proxy.</div>
+
+            <div style="font-size:13px;font-weight:500;margin-bottom:6px">The formula</div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:12px;line-height:1.8">
+              B(s) = log_PPL<sub>M1</sub>(s) / log_X-PPL<sub>M1,M2</sub>(s)<br>
+              <span style="color:var(--muted);font-size:11px">Numerator: how surprised M1 is by the text (observer perplexity)</span><br>
+              <span style="color:var(--muted);font-size:11px">Denominator: cross-perplexity from the observer distribution against the performer distribution</span><br>
+              <span style="color:var(--muted);font-size:11px">Because the backend has full logits for both models, this is materially closer to the paper than the browser-only approximation.</span>
+            </div>
+
+            <div style="font-size:13px;font-weight:500;margin-bottom:6px">Score interpretation</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">Threshold is shown at <strong>0.9</strong> as a starting reference. Since exact score ranges depend on the model pair you run, treat the threshold as configurable rather than universal.</div>
+
+            <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:5px;padding:10px 12px;margin-bottom:0">
+              <div style="font-size:11px;font-weight:500;color:var(--amber);font-family:var(--mono);margin-bottom:4px">First run</div>
+              <div style="font-size:11px;color:var(--amber);line-height:1.5">The first backend request may take a while because Python needs to load the models, and the models may need to download once. After that, scoring should be much more stable than the browser-only proxy.</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="local-bino-sidecard">
+              <div style="font-size:11px;font-weight:500;color:var(--muted);font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px">Local Binoculars</div>
+
+              <label class="label" style="margin-bottom:6px">Backend URL</label>
+              <input type="text" id="binoBackendUrl" value="" placeholder="https://your-backend.onrender.com" style="width:100%;font-family:var(--mono);font-size:12px;padding:9px 12px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text);outline:none;margin-bottom:14px">
+
+              <div id="gptBinoStatus" style="display:none;font-size:11px;font-family:var(--mono);padding:10px 12px;border-radius:4px;margin-bottom:12px;line-height:1.6"></div>
+
+              <div id="gptBinoProgress" style="display:none;margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:5px">
+                  <span id="gptProgressLabel">Scoring sentences...</span>
+                  <span id="gptProgressPct">0%</span>
+                </div>
+                <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+                  <div id="gptProgressBar" style="height:100%;background:var(--text);border-radius:2px;width:0%;transition:width .3s"></div>
+                </div>
+              </div>
+
+              <div id="gptBinoResult" style="display:none;margin-bottom:14px">
+                <div class="local-bino-metric-grid">
+                  <div class="local-bino-metric">
+                    <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">Bino score</div>
+                    <div style="font-size:26px;font-weight:500;font-family:var(--mono)" id="gptBinoScore">—</div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:2px">threshold: 0.9</div>
+                  </div>
+                  <div class="local-bino-metric">
+                    <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">Verdict</div>
+                    <div style="font-size:12px;font-weight:500;margin-top:4px" id="gptBinoVerdict">—</div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:2px" id="gptBinoPair">observer / performer</div>
+                  </div>
+                </div>
+
+                <!-- Score bar -->
+                <div style="margin-bottom:6px">
+                  <div style="position:relative;height:10px;border-radius:5px;background:linear-gradient(to right,#b42218 0%,#f5bfbb 22%,#fdefc8 40%,#dcf0e5 65%,#1a7a3c 100%);border:1px solid var(--border)">
+                    <div id="gptBinoNeedle" style="position:absolute;top:-4px;width:2px;height:18px;background:var(--text);border-radius:1px;transform:translateX(-50%);transition:left .5s ease;left:50%"></div>
+                    <!-- threshold marker -->
+                    <div style="position:absolute;top:-2px;height:14px;width:1px;background:var(--red);opacity:0.6;left:45%"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:5px">
+                    <span>0.0 AI</span><span style="color:var(--red)">0.9 threshold</span><span>2.0 human</span>
+                  </div>
+                </div>
+
+                <!-- Per-sentence breakdown -->
+                <div style="margin-top:14px">
+                  <div style="font-size:11px;font-weight:500;color:var(--muted);font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Per-sentence bino scores (backend)</div>
+                  <div id="gptSentScores" class="local-bino-sentence-list"></div>
+                </div>
+
+                <div id="gptBinoNote" style="font-size:11px;color:var(--muted);line-height:1.6;background:var(--surface2);border:1px solid var(--border);padding:10px 12px;border-radius:5px;margin-top:10px"></div>
+              </div>
+
+              <button class="btn-primary" id="gptBinoBtn" onclick="runGptBinoculars()" style="width:100%" disabled>
+                Analyse essay first
+              </button>
+              <div id="binoBackendHint" style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:7px;text-align:center">set this to your deployed backend, or leave blank to use localhost while developing</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="section-title">Document statistics</div>
+    <div class="grid3">
+      <div class="panel"><div class="panel-body" id="docStats1"></div></div>
+      <div class="panel"><div class="panel-body" id="docStats2"></div></div>
+      <div class="panel"><div class="panel-body" id="docStats3"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="render-config.js"></script>
+<script>
+const THR = -4.45, DEEP = -4.6, W = 6;
+
+function tokenize(t){ return t.toLowerCase().match(/\b[a-zA-Z']+\b/g)||[]; }
+function getSentences(t){ return t.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>s.split(/\s+/).length>=5); }
+
+function buildNgrams(tokens,n,k){
+  const m={}, V=new Set(tokens).size;
+  for(let i=0;i<tokens.length-n+1;i++){
+    const ctx=tokens.slice(i,i+n-1).join('|'), w=tokens[i+n-1];
+    if(!m[ctx])m[ctx]={};
+    m[ctx][w]=(m[ctx][w]||0)+1;
+  }
+  return function lp(ctx,w){
+    const key=ctx.slice(-(n-1)).join('|'), d=m[key]||{};
+    return Math.log(((d[w]||0)+k)/(Object.values(d).reduce((a,b)=>a+b,0)+k*V));
+  };
+}
+
+function scoreSent(s,obs3,obs2){
+  const t=tokenize(s); if(t.length<4)return null;
+  const tp=['<s>','<s>',...t],ol=[],xl=[];
+  for(let i=2;i<tp.length;i++){
+    const ctx=[tp[i-2],tp[i-1]],w=tp[i],o=obs3(ctx,w);
+    ol.push(o); xl.push(o-obs2(ctx,w));
+  }
+  const lo=-ol.reduce((a,b)=>a+b,0)/ol.length, lx=-xl.reduce((a,b)=>a+b,0)/xl.length;
+  if(Math.abs(lx)<1e-9)return null;
+  const b=lo/lx; return(b>-6&&b<6)?b:null;
+}
+
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const stdev=a=>{ if(a.length<2)return 0; const m=mean(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)); };
+
+function risk(val,good,bad,hi){
+  const ok=hi?val>=good:val<=good, amb=hi?val>=bad:val<=bad;
+  return ok?'pass':amb?'amber':'fail';
+}
+
+// ── THRESHOLD BAR RENDERER ─────────────────────────────────────────────────
+// min/max define the visual scale. goodStart/goodEnd define the green zone.
+// amberStart/amberEnd define the amber zone. rest is red.
+function renderThresholdBar(container, items){
+  const el=document.getElementById(container);
+  el.innerHTML='';
+  items.forEach(d=>{
+    const r=risk(d.val,d.good,d.bad,d.hi);
+    const rLabel=r==='pass'?'human range':r==='amber'?'borderline':'AI zone';
+    const colClass=r;
+    const col=r==='pass'?'var(--green)':r==='amber'?'var(--amber)':'var(--red)';
+
+    // Position needle on scale min→max
+    const pct=Math.max(0,Math.min(100, (d.val-d.min)/(d.max-d.min)*100));
+    // Human zone position
+    const humanStart=Math.max(0,(d.humanMin-d.min)/(d.max-d.min)*100);
+    const humanEnd=Math.min(100,(d.humanMax-d.min)/(d.max-d.min)*100);
+    const amberStart=d.hi ? Math.max(0,(d.bad-d.min)/(d.max-d.min)*100) : Math.max(0,(d.humanMax-d.min)/(d.max-d.min)*100);
+    const amberEnd=d.hi ? Math.max(0,(d.good-d.min)/(d.max-d.min)*100) : Math.max(0,(d.bad-d.min)/(d.max-d.min)*100);
+
+    el.innerHTML+=`
+    <div class="tbar-wrap">
+      <div class="tbar-label-row">
+        <span class="tbar-name">${d.label}</span>
+      </div>
+      <div class="tbar-val-row" style="margin-bottom:5px">
+        <span class="tbar-val" style="color:${col}">${d.display}</span>
+        <span class="tbar-interp ${colClass}">${rLabel}</span>
+        <span style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-left:4px">${d.context||''}</span>
+      </div>
+      <div class="tbar-track" style="margin-bottom:16px">
+        ${d.hi ? `
+          <div class="tbar-zone-ai" style="left:0;width:${amberStart}%"></div>
+          <div class="tbar-zone-amber" style="left:${amberStart}%;width:${amberEnd-amberStart}%"></div>
+          <div class="tbar-zone-human" style="left:${amberEnd}%;width:${100-amberEnd}%"></div>
+        ` : `
+          <div class="tbar-zone-human" style="left:0;width:${amberStart}%"></div>
+          <div class="tbar-zone-amber" style="left:${amberStart}%;width:${amberEnd-amberStart}%"></div>
+          <div class="tbar-zone-ai" style="left:${amberEnd}%;width:${100-amberEnd}%"></div>
+        `}
+        <div class="tbar-needle" style="left:${pct}%"></div>
+        <div class="tbar-tick" style="left:${Math.max(0,(d.good-d.min)/(d.max-d.min)*100)}%">${d.goodLabel}</div>
+        <div class="tbar-tick" style="left:${Math.max(0,(d.bad-d.min)/(d.max-d.min)*100)}%">${d.badLabel}</div>
+      </div>
+    </div>`;
+  });
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function runAnalysis(){
+  const text=document.getElementById('essayInput').value.trim();
+  const errEl=document.getElementById('errorMsg');
+  errEl.style.display='none';
+  const words=tokenize(text);
+  if(words.length<150){ errEl.textContent='Too short — minimum 150 words required.'; errEl.style.display='block'; return; }
+
+  const btn=document.getElementById('analyseBtn'), prog=document.getElementById('progress');
+  btn.disabled=true; prog.style.display='block';
+  document.getElementById('results').style.display='none';
+
+  const msgs=['Building language model from essay...','Scoring sentences with bino algorithm...','Running 6-sentence window analysis...','Checking consecutive aggregation runs...','Computing surface & stylometric metrics...','Computing discourse & pragmatic signals...','Computing epistemic & content cues...','Computing predictability metrics...','Detecting paraphrase fingerprints...','Generating prioritised recommendations...','Rendering dashboard...'];
+  for(const m of msgs){ prog.textContent=m; await sleep(100); }
+
+  const obs3=buildNgrams(words,3,0.05), obs2=buildNgrams(words,2,0.2);
+  const sentences=getSentences(text);
+  const scored=sentences.map(s=>({s,sc:scoreSent(s,obs3,obs2)})).filter(x=>x.sc!==null);
+  const allSc=scored.map(x=>x.sc), avgBino=mean(allSc);
+
+  const wins=[]; for(let i=0;i<=scored.length-W;i++) wins.push(mean(scored.slice(i,i+W).map(x=>x.sc)));
+  const flaggedWins=wins.filter(m=>m<THR).length;
+  const deepCount=allSc.filter(x=>x<DEEP).length;
+  let cur=0,maxRun=0;
+  const runMap=allSc.map(x=>{ if(x<-4.35){cur++;maxRun=Math.max(maxRun,cur);return true;}else{cur=0;return false;} });
+
+  // Family 1
+  const wl=words.length, V100=wl-99;
+  let mattrS=0; for(let i=0;i<V100;i++) mattrS+=new Set(words.slice(i,i+100)).size/100;
+  const mattr=V100>0?mattrS/V100:0;
+  const freq={}; words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  const uniW=Object.keys(freq);
+  const hapax=uniW.filter(w=>freq[w]===1).length/uniW.length;
+  const slens=sentences.map(s=>s.split(/\s+/).length);
+  const sentCV=slens.length>1?stdev(slens)/mean(slens):0;
+  const commas=(text.match(/,/g)||[]).length/wl*100;
+  const emDashes=(text.match(/—/g)||[]).length;
+  const fpCount=words.filter(w=>['i','my','me','myself'].includes(w)).length;
+  const fpRatio=fpCount/wl*100;
+  const syllCount=words.reduce((a,w)=>{ const v=(w.match(/[aeiou]+/g)||[]).length; return a+Math.max(1,w.endsWith('e')&&!w.endsWith('le')?v-1:v); },0);
+  const fk=0.39*mean(slens)+11.8*(syllCount/wl)-15.59;
+
+  // Family 2
+  const tl=text.toLowerCase();
+  const hedgeW=['perhaps','possibly','might','may','could','seem','appears','suggest','tend','likely','probably','often','sometimes','generally','usually','typically','arguably','somewhat','fairly','rather','quite'];
+  const hedgeR=words.filter(w=>hedgeW.includes(w)).length/wl*100;
+  const boostW=['clearly','obviously','certainly','definitely','always','never','absolutely','completely','entirely','fundamentally','crucial','essential','critical','vital'];
+  const boostR=words.filter(w=>boostW.includes(w)).length/wl*100;
+  const guidePh=['in summary','in conclusion','furthermore','moreover','additionally','in addition','however','nevertheless','therefore','thus','not only','but also','finally','lastly'];
+  const guideC=guidePh.reduce((a,p)=>a+(tl.split(p).length-1),0)/sentences.length*100;
+  const stanceM=['i think','i believe','i find','in my view','i kept','i used to','in my reading','what strikes me','what i think','what i find','if i had to','in my experience'];
+  const stanceC=stanceM.reduce((a,m)=>a+(tl.split(m).length-1),0);
+  const paras=text.split('\n').map(l=>l.trim()).filter(l=>l.split(/\s+/).length>20);
+  const paraLens=paras.map(p=>p.split(/\s+/).length);
+  const paraCV=paraLens.length>1?stdev(paraLens)/mean(paraLens):0;
+
+  // Family 3
+  const named=['ghana','accra','fayol','donabedian','sharif','mckinsey','valiotis','tiyetibo','mccalman','bombard','liebler','akan','ewe','taylor','weber','mayo','deming'];
+  const nameH=named.reduce((a,n)=>a+(tl.split(n).length-1),0);
+  const expM=['i have come across','i kept noticing','i used to think','in my view','what strikes me','what i find','if i had to','in my experience','in my reading'];
+  const expC=expM.reduce((a,m)=>a+(tl.split(m).length-1),0);
+  const caveatW=['but','however','although','though','in practice','depends on','not necessarily'];
+  const caveatC=caveatW.reduce((a,w)=>a+(tl.split(w).length-1),0);
+  const citations=(text.match(/\([A-Z][a-z]+.*?\d{4}\)/g)||[]).length;
+
+  // Family 4
+  const perps=sentences.map(s=>{ const t=tokenize(s); if(t.length<4)return null; const tp=['<s>','<s>',...t],ol=[]; for(let i=2;i<tp.length;i++) ol.push(obs3([tp[i-2],tp[i-1]],tp[i])); return Math.exp(-ol.reduce((a,b)=>a+b,0)/ol.length); }).filter(x=>x!==null);
+  const avgPerp=perps.length?mean(perps):0, perpStd=perps.length>1?stdev(perps):0;
+  const bm={}; for(let i=0;i<wl-1;i++){ if(!bm[words[i]])bm[words[i]]={}; bm[words[i]][words[i+1]]=(bm[words[i]][words[i+1]]||0)+1; }
+  const top1=words.slice(0,-1).filter((w,i)=>{ const d=bm[w]||{}; const b=Object.entries(d).sort((a,c)=>c[1]-a[1])[0]; return b&&b[0]===words[i+1]; }).length;
+  const top1R=top1/Math.max(wl-1,1);
+  const fwSet=new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','is','are','was','were','be','been','have','has','had','do','does','did','will','would','could','should','may','might','can','it','its','that','this','which','who','what','if','as','by','from','not','no','so','they','we','our','us','me','my','i','you','also','just','very','more','all','some','any','many','other','then','there']);
+  let paraFlags=0; paras.forEach(p=>{ const ps=getSentences(p); if(ps.length<2)return; const psl=ps.map(s=>s.split(/\s+/).length); const lb=stdev(psl); const psc=ps.map(s=>scoreSent(s,obs3,obs2)).filter(x=>x!==null&&x>-5); if(psc.length&&(mean(psc)<THR||lb<5))paraFlags++; });
+  const spinnerFP=sentences.filter(s=>{ const sw=tokenize(s); if(sw.length<8)return false; const fwR=sw.filter(w=>fwSet.has(w)).length/sw.length; const cw=sw.filter(w=>!fwSet.has(w)); const rC=cw.filter(w=>(freq[w]||0)<=2).length; return fwR>0.60&&(rC/Math.max(cw.length,1))>0.40; }).length;
+
+  // ── SCORING ──
+  const checks=[
+    {v:mattr,g:0.70,b:0.65,hi:true},{v:fpRatio,g:0.9,b:0.5,hi:true},{v:sentCV,g:0.40,b:0.30,hi:true},
+    {v:hedgeR,g:1.5,b:0.8,hi:true},{v:boostR,g:2.0,b:3.0,hi:false},{v:guideC,g:25,b:40,hi:false},
+    {v:stanceC,g:4,b:2,hi:true},{v:expC,g:5,b:2,hi:true},{v:avgPerp,g:60,b:45,hi:true},
+    {v:perpStd,g:20,b:10,hi:true},{v:avgBino,g:-4.35,b:-4.45,hi:true},
+    {v:flaggedWins,g:3,b:10,hi:false},{v:maxRun,g:3,b:4,hi:false},
+    {v:spinnerFP,g:0,b:3,hi:false},{v:paraFlags,g:0,b:3,hi:false},{v:emDashes,g:0,b:2,hi:false},
+  ];
+  const passes=checks.filter(c=>risk(c.v,c.g,c.b,c.hi)==='pass').length;
+  const fails=checks.filter(c=>risk(c.v,c.g,c.b,c.hi)==='fail').length;
+  const ambers=checks.filter(c=>risk(c.v,c.g,c.b,c.hi)==='amber').length;
+  let est,estClass;
+  if(fails===0&&flaggedWins<=2&&maxRun<4){est='<10%';estClass='pass';}
+  else if(fails<=2&&flaggedWins<=8&&maxRun<4){est='10–15%';estClass='amber';}
+  else if(fails<=4&&flaggedWins<=20){est='15–25%';estClass='amber';}
+  else{est='>25%';estClass='fail';}
+
+  // ── RENDER VERDICT ──
+  const vb=document.getElementById('verdictBar'); vb.className='verdict-bar '+estClass;
+  document.getElementById('verdictPct').className='verdict-pct '+estClass;
+  document.getElementById('verdictPct').textContent=est;
+  document.getElementById('verdictText').textContent=estClass==='pass'?'Estimated AI signal: low':estClass==='amber'?'Estimated AI signal: moderate':'Estimated AI signal: high';
+  document.getElementById('verdictSub').textContent=`${passes} pass / ${ambers} amber / ${fails} fail across 16 checks — ${wl} words, ${sentences.length} sentences`;
+
+  // ── TOP METRICS ──
+  document.getElementById('topMetrics').innerHTML=[
+    {label:'Avg bino',val:avgBino.toFixed(3),note:'Human target: above −4.35',r:risk(avgBino,-4.35,-4.45,true)},
+    {label:'Window flags',val:`${flaggedWins}/${wins.length}`,note:'Human target: under 3 flagged',r:risk(flaggedWins,3,10,false)},
+    {label:'Max consec run',val:`${maxRun} sents`,note:'Aggregation triggers at 4+',r:risk(maxRun,3,4,false)},
+    {label:'Em dashes',val:emDashes,note:'Must be zero — strongest AI signal',r:risk(emDashes,0,2,false)},
+  ].map(m=>`<div class="metric-card"><div class="metric-val ${m.r}">${m.val}</div><div class="metric-name">${m.label}</div><div class="metric-note">${m.note}</div></div>`).join('');
+
+  // ── SENTENCE SCORES ──
+  const sentEl=document.getElementById('sentScores');
+  sentEl.innerHTML=scored.map(({s,sc})=>{
+    const r=sc<DEEP?'fail':sc<THR?'amber':'pass';
+    const lbl=sc<DEEP?'deep AI':sc<THR?'AI zone':sc<-4.2?'marginal':'human';
+    return `<div class="sent-item">
+      <div class="sent-score-wrap">
+        <div class="sent-score" style="color:${r==='pass'?'var(--green)':r==='amber'?'var(--amber)':'var(--red)'}">${sc.toFixed(3)}</div>
+        <div class="sent-badge ${r}">${lbl}</div>
+      </div>
+      <div class="sent-text">${s.substring(0,130)}${s.length>130?'…':''}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('m1badge').innerHTML=`<span class="badge ${risk(avgBino,-4.35,-4.45,true)}">${avgBino.toFixed(3)} avg</span>`;
+
+  // ── WINDOWS ──
+  document.getElementById('windowGrid').innerHTML=wins.map((m,i)=>{
+    const c=m<THR?'var(--red)':m<THR+0.08?'#d4a017':'var(--green)';
+    return `<div class="win-dot" style="background:${c}" data-tip="W${i+1}: ${m.toFixed(3)}"></div>`;
+  }).join('');
+  document.getElementById('m2badge').innerHTML=`<span class="badge ${risk(flaggedWins,3,10,false)}">${flaggedWins}/${wins.length} flagged</span>`;
+
+  // ── RUNS ──
+  document.getElementById('runVisual').innerHTML=runMap.map(b=>`<div class="run-dot" style="background:${b?'var(--red)':'var(--border2)'}"></div>`).join('');
+  document.getElementById('runDesc').textContent=`Max run: ${maxRun} sentences. Trigger: 4. ${runMap.filter(Boolean).length} total AI-like sentences out of ${runMap.length}.`;
+  document.getElementById('m3badge').innerHTML=`<span class="badge ${risk(maxRun,3,4,false)}">${maxRun} max</span>`;
+
+  // ── FAMILY BARS ──
+  renderThresholdBar('f1bars',[
+    {label:'MATTR-100 (lexical diversity)',val:mattr,display:mattr.toFixed(3),good:0.70,bad:0.65,hi:true,min:0.5,max:0.9,humanMin:0.70,humanMax:0.90,goodLabel:'0.70',badLabel:'0.65',context:'human: 0.70–0.82'},
+    {label:'First-person % (personal voice)',val:fpRatio,display:fpRatio.toFixed(2)+'%',good:0.9,bad:0.5,hi:true,min:0,max:4,humanMin:0.9,humanMax:4,goodLabel:'0.9%',badLabel:'0.5%',context:'human: >1.0%'},
+    {label:'Sentence length CV (variation)',val:sentCV,display:sentCV.toFixed(3),good:0.40,bad:0.30,hi:true,min:0.1,max:0.8,humanMin:0.40,humanMax:0.8,goodLabel:'0.40',badLabel:'0.30',context:'human: >0.40'},
+    {label:'Comma density /100 words',val:commas,display:commas.toFixed(1),good:5,bad:4,hi:true,min:0,max:15,humanMin:5,humanMax:12,goodLabel:'5',badLabel:'4',context:'human: 5–12'},
+    {label:'Flesch-Kincaid grade level',val:fk,display:fk.toFixed(1),good:12,bad:10,hi:true,min:6,max:20,humanMin:12,humanMax:18,goodLabel:'12',badLabel:'10',context:'academic: 12–18'},
+    {label:'Em dashes (must be zero)',val:emDashes,display:String(emDashes),good:0,bad:2,hi:false,min:0,max:8,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'2',context:'target: 0'},
+  ]);
+  renderThresholdBar('f2bars',[
+    {label:'Hedge ratio /100w (uncertainty)',val:hedgeR,display:hedgeR.toFixed(2),good:1.5,bad:0.8,hi:true,min:0,max:6,humanMin:1.5,humanMax:6,goodLabel:'1.5',badLabel:'0.8',context:'human academic: 2–6'},
+    {label:'Booster ratio /100w (certainty)',val:boostR,display:boostR.toFixed(2),good:2.0,bad:3.0,hi:false,min:0,max:5,humanMin:0,humanMax:2.0,goodLabel:'2.0',badLabel:'3.0',context:'AI overuses: >2.0'},
+    {label:'Reader-guidance /100s',val:guideC,display:guideC.toFixed(1),good:25,bad:40,hi:false,min:0,max:60,humanMin:0,humanMax:25,goodLabel:'25',badLabel:'40',context:'AI heavy: >25'},
+    {label:'Stance markers (personal voice)',val:stanceC,display:String(stanceC),good:4,bad:2,hi:true,min:0,max:20,humanMin:4,humanMax:20,goodLabel:'4',badLabel:'2',context:'human: >4'},
+    {label:'Paragraph length CV',val:paraCV,display:paraCV.toFixed(3),good:0.25,bad:0.15,hi:true,min:0,max:0.6,humanMin:0.25,humanMax:0.6,goodLabel:'0.25',badLabel:'0.15',context:'human: >0.25'},
+  ]);
+  renderThresholdBar('f3bars',[
+    {label:'Named entity hits (groundedness)',val:nameH,display:String(nameH),good:8,bad:4,hi:true,min:0,max:25,humanMin:8,humanMax:25,goodLabel:'8',badLabel:'4',context:'higher = more grounded'},
+    {label:'Personal experience markers',val:expC,display:String(expC),good:5,bad:2,hi:true,min:0,max:15,humanMin:5,humanMax:15,goodLabel:'5',badLabel:'2',context:'human: >5'},
+    {label:'Caveat/qualification density',val:caveatC,display:String(caveatC),good:20,bad:10,hi:true,min:0,max:60,humanMin:20,humanMax:60,goodLabel:'20',badLabel:'10',context:'humans qualify claims'},
+    {label:'Citation count',val:citations,display:String(citations),good:3,bad:1,hi:true,min:0,max:15,humanMin:3,humanMax:15,goodLabel:'3',badLabel:'1',context:'academic: >5'},
+  ]);
+  renderThresholdBar('f4bars',[
+    {label:'Avg perplexity (unpredictability)',val:avgPerp,display:avgPerp.toFixed(1),good:60,bad:45,hi:true,min:20,max:120,humanMin:60,humanMax:120,goodLabel:'60',badLabel:'45',context:'human: >60, AI: <50'},
+    {label:'Perplexity stdev (variance)',val:perpStd,display:perpStd.toFixed(1),good:20,bad:10,hi:true,min:0,max:50,humanMin:20,humanMax:50,goodLabel:'20',badLabel:'10',context:'human: >30, AI: <15'},
+    {label:'Avg bino score',val:avgBino,display:avgBino.toFixed(4),good:-4.35,bad:-4.45,hi:true,min:-5,max:-3,humanMin:-4.35,humanMax:-3,goodLabel:'−4.35',badLabel:'−4.45',context:'AI flag: <−4.45'},
+    {label:'Top-1 bigram prediction rate',val:top1R,display:top1R.toFixed(3),good:0.38,bad:0.42,hi:false,min:0.2,max:0.6,humanMin:0.2,humanMax:0.38,goodLabel:'0.38',badLabel:'0.42',context:'AI: >0.38'},
+    {label:'Spinner fingerprints',val:spinnerFP,display:String(spinnerFP),good:0,bad:3,hi:false,min:0,max:8,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'3',context:'0 = clean'},
+    {label:'Paragraph-level flags',val:paraFlags,display:String(paraFlags),good:0,bad:3,hi:false,min:0,max:10,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'3',context:'target: 0'},
+  ]);
+
+  // ── NEXT STEPS ──
+  const issues=[];
+  if(emDashes>0) issues.push({p:'high',title:`Remove all ${emDashes} em dash${emDashes>1?'es':''}`,desc:'Em dashes are one of the most reliable AI fingerprints. Replace each one with a comma, semicolon, or full stop — or split the sentence.',quote:'Search your document for "—". Every one is a flag.'});
+  if(maxRun>=4) issues.push({p:'high',title:`Break consecutive run of ${maxRun} AI-like sentences`,desc:`${maxRun} sentences in a row score below bino −4.35. Turnitin's aggregation triggers at 4. Find this cluster in the sentence list and rewrite at least 2 with personal observations or unexpected phrasing.`,quote:'One "I think" or a rough, friction-filled sentence breaks the run.'});
+  if(flaggedWins>8) issues.push({p:'high',title:`Reduce window flags: ${flaggedWins}/${wins.length} flagged`,desc:'More than 8% of your text falls in AI-flagged windows. Target sentences scoring below −4.6 (shown as "deep AI" in the sentence list). Avoid "X is Y" and "X means Z" as paragraph openers.',quote:'Start paragraphs mid-thought rather than with a definition.'});
+  if(perpStd<15) issues.push({p:'high',title:`Increase perplexity variance: ${perpStd.toFixed(1)} (target >20)`,desc:'Sentence difficulty is too uniform — every sentence is roughly the same complexity. Add one very short punchy sentence (5-8 words) and one long winding sentence (50+ words) per section.',quote:'Short. Then a sentence that takes real effort to follow all the way to the end.'});
+  if(emDashes===0&&maxRun<4&&flaggedWins<=8&&perpStd>=15&&fpRatio<0.8) issues.push({p:'med',title:`Increase first-person usage: ${fpRatio.toFixed(2)}% (target >1.0%)`,desc:'Add personal voice markers. Aim for at least one per 3-4 paragraphs.',quote:'"I think", "In my view", "What strikes me" — these all help.'});
+  if(stanceC<4) issues.push({p:'med',title:`Add stance markers: ${stanceC} detected (target >4)`,desc:'Stance markers signal human judgement rather than AI summarisation.',quote:'"I think governance fails more often than people acknowledge" scores far better than "Governance often fails."'});
+  if(paraFlags>0) issues.push({p:'med',title:`Fix ${paraFlags} paragraph${paraFlags>1?'s':''} with low burstiness or poor bino`,desc:'Some paragraphs have sentences all the same length. Add a very short (5-7 word) or very long (50+ word) sentence to break the uniformity.',quote:'Check para-level flags by looking for clusters of similar-length sentences.'});
+  if(hedgeR<1.0) issues.push({p:'med',title:`Add hedging language: ${hedgeR.toFixed(2)}/100w (target >1.5)`,desc:'Academic human writing qualifies its claims. Add "tends to", "often", "in practice", "can be" to statements that are currently stated too flatly.',quote:'Replace "management improves outcomes" with "management tends to improve outcomes when..."'});
+  if(citations<3) issues.push({p:'low',title:`Add more citations: ${citations} found (target >5)`,desc:'Citation density is a key epistemic grounding signal. Each research claim should have a source.',quote:'Add (Author, Year) after any sentence making a research or factual claim.'});
+  if(spinnerFP>0) issues.push({p:'med',title:`${spinnerFP} possible paraphrase fingerprint${spinnerFP>1?'s':''}`,desc:'Some sentences have high function-word ratios with unusual content words — the pattern left by AI paraphrase tools. Rewrite these naturally.',quote:'If a sentence sounds formal but with one oddly technical word swapped in, rewrite it conversationally.'});
+  if(issues.length===0) issues.push({p:'low',title:'No critical issues found',desc:'All major signals are in human range. Run a final check for em dashes and ensure you pasted the correct version.',quote:'Search your document for "—". Should return zero results.'});
+
+  document.getElementById('nextSteps').innerHTML=issues.map((issue,i)=>`
+    <div class="step">
+      <div class="step-num ${issue.p}">${i+1}</div>
+      <div>
+        <div class="step-title">${issue.title}</div>
+        <div class="step-desc">${issue.desc}</div>
+        <div class="step-quote">${issue.quote}</div>
+      </div>
+    </div>`).join('');
+
+  // ── DOC STATS ──
+  const avgSL=mean(slens);
+  document.getElementById('docStats1').innerHTML=[
+    {k:'Words',v:wl},{k:'Sentences',v:sentences.length},{k:'Paragraphs',v:paras.length},
+    {k:'Avg sentence length',v:avgSL.toFixed(1)+' words'},{k:'Min / max sentence',v:Math.min(...slens)+' / '+Math.max(...slens)+' words'},
+  ].map(r=>`<div class="stat-row"><span class="stat-k">${r.k}</span><span class="stat-v">${r.v}</span></div>`).join('');
+  document.getElementById('docStats2').innerHTML=[
+    {k:'Sentence stdev',v:stdev(slens).toFixed(1)+' words'},{k:'Sentence CV',v:sentCV.toFixed(3)},
+    {k:'Unique words',v:uniW.length},{k:'Hapax legomena',v:uniW.filter(w=>freq[w]===1).length},
+    {k:'Em dashes',v:emDashes+(emDashes>0?' ⚠':' ✓')},
+  ].map(r=>`<div class="stat-row"><span class="stat-k">${r.k}</span><span class="stat-v">${r.v}</span></div>`).join('');
+  document.getElementById('docStats3').innerHTML=[
+    {k:'Avg perplexity',v:avgPerp.toFixed(1)},{k:'Perplexity stdev',v:perpStd.toFixed(1)},
+    {k:'Deep sentences (<−4.6)',v:`${deepCount} / ${scored.length}`},
+    {k:'Citations detected',v:citations},{k:'First-person tokens',v:`${fpCount} (${fpRatio.toFixed(2)}%)`},
+  ].map(r=>`<div class="stat-row"><span class="stat-k">${r.k}</span><span class="stat-v">${r.v}</span></div>`).join('');
+
+  prog.style.display='none'; btn.disabled=false;
+  document.getElementById('results').style.display='block';
+  // Enable local bino button
+  const gptBtn = document.getElementById('gptBinoBtn');
+  gptBtn.disabled = false;
+  gptBtn.textContent = 'Run Local Binoculars ↗';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+// ── LOCAL BINOCULARS BACKEND ────────────────────────────────────────────────
+const BINO_LOCAL_FALLBACK_URL = 'http://127.0.0.1:8008';
+const BINO_THRESHOLD = 0.9;
+
+function getConfiguredBackendUrl() {
+  const fromMeta = document.querySelector('meta[name="bino-backend-url"]')?.content?.trim();
+  if (fromMeta) return fromMeta;
+
+  const fromWindow = typeof window.BINO_BACKEND_URL === 'string' ? window.BINO_BACKEND_URL.trim() : '';
+  if (fromWindow) return fromWindow;
+
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = (params.get('backendUrl') || '').trim();
+  if (fromQuery) return fromQuery;
+
+  const isLocalHost = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
+  if (isLocalHost) {
+    return BINO_LOCAL_FALLBACK_URL;
+  }
+
+  return '';
+}
+
+function syncBinoBackendUi() {
+  const input = document.getElementById('binoBackendUrl');
+  const hint = document.getElementById('binoBackendHint');
+  if (!input || !hint) return;
+
+  if (!input.value.trim()) {
+    input.value = getConfiguredBackendUrl();
+  }
+
+  const effectiveUrl = input.value.trim();
+  const isLocal = effectiveUrl === BINO_LOCAL_FALLBACK_URL;
+  hint.textContent = effectiveUrl
+    ? (isLocal
+        ? 'using localhost for local development'
+        : 'using the configured deployed backend')
+    : 'enter your deployed backend URL, or leave blank to use localhost while developing';
+}
+
+function getBinoBackendBaseUrl() {
+  const input = document.getElementById('binoBackendUrl');
+  const raw = (input?.value || getConfiguredBackendUrl() || BINO_LOCAL_FALLBACK_URL).trim().replace(/\/+$/,'');
+  if (!/^https?:\/\//i.test(raw)) {
+    throw new Error('Backend URL must start with http:// or https://');
+  }
+  return raw;
+}
+
+async function callBinoBackend(text) {
+  const baseUrl = getBinoBackendBaseUrl();
+  const resp = await fetch(`${baseUrl}/score`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text,
+      batch_size: 2,
+      max_length: 256
+    })
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error(data?.detail || `Backend request failed (${resp.status})`);
+  }
+  return data;
+}
+
+async function runGptBinoculars() {
+  const text = document.getElementById('essayInput').value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('gptBinoBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  document.getElementById('gptBinoResult').style.display = 'none';
+  document.getElementById('gptBinoProgress').style.display = 'block';
+  document.getElementById('gptProgressBar').style.width = '12%';
+  document.getElementById('gptProgressPct').textContent = '...';
+  document.getElementById('gptProgressLabel').textContent = 'Scoring with backend...';
+  showGptStatus('info', 'Calling the binoculars backend. First run can take a while while models download and warm up.');
+
+  try {
+    const data = await callBinoBackend(text);
+    const results = data.sentence_scores || [];
+    if (!results.length) throw new Error('Backend returned no sentence scores.');
+
+    const avgBino = Number(data.document_score);
+    const threshold = Number(data.threshold || BINO_THRESHOLD);
+    const verdict = data.document_verdict || (avgBino < threshold ? 'ai' : avgBino < 1.1 ? 'borderline' : 'human');
+    const isAI = verdict === 'ai';
+
+    document.getElementById('gptProgressBar').style.width = '100%';
+    document.getElementById('gptProgressPct').textContent = '100%';
+    document.getElementById('gptProgressLabel').textContent = `Scored ${data.scored_sentence_count || results.length} sentences`;
+    document.getElementById('gptBinoProgress').style.display = 'none';
+    document.getElementById('gptBinoStatus').style.display = 'none';
+    document.getElementById('gptBinoResult').style.display = 'block';
+
+    document.getElementById('gptBinoPair').textContent =
+      `${data.observer_model || 'observer'} / ${data.performer_model || 'performer'}`;
+
+    const scoreEl = document.getElementById('gptBinoScore');
+    scoreEl.textContent = avgBino.toFixed(4);
+    const col = isAI ? 'var(--red)' : avgBino < 1.1 ? 'var(--amber)' : 'var(--green)';
+    scoreEl.style.color = col;
+
+    const verdictEl = document.getElementById('gptBinoVerdict');
+    verdictEl.textContent = isAI ? '⚠ AI-Generated' : avgBino < 1.1 ? '~ Borderline' : '✓ Human-Written';
+    verdictEl.style.color = col;
+
+    const needlePct = Math.max(2, Math.min(98, avgBino / 2.0 * 100));
+    document.getElementById('gptBinoNeedle').style.left = needlePct + '%';
+
+    const sentEl = document.getElementById('gptSentScores');
+    sentEl.innerHTML = results.map(r => {
+      const b = Number(r.bino);
+      const rc = b < 0.85 ? 'var(--red)' : b < threshold ? 'var(--amber)' : 'var(--green)';
+      const lbl = b < 0.85 ? 'AI' : b < threshold ? 'borderline' : 'human';
+      return `<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:start">
+        <div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:500;color:${rc}">${b.toFixed(4)}</div>
+          <div style="font-size:9px;padding:1px 5px;border-radius:2px;display:inline-block;margin-top:2px;font-family:var(--mono);background:${b<0.85?'var(--red-bg)':b<threshold?'var(--amber-bg)':'var(--green-bg)'};color:${rc};border:1px solid ${b<0.85?'var(--red-border)':b<threshold?'var(--amber-border)':'var(--green-border)'};">${lbl}</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">${r.sentence.substring(0,110)}${r.sentence.length>110?'…':''}</div>
+      </div>`;
+    }).join('');
+
+    let note = `<strong>Local binoculars score: ${avgBino.toFixed(4)}</strong> — `;
+    note += isAI
+      ? `Below the displayed threshold (${threshold}).`
+      : `Above the displayed threshold (${threshold}).`;
+    note += ` Scored ${data.scored_sentence_count || results.length} of ${data.sentence_count || results.length} sentences.`;
+    note += ` Observer: ${data.observer_model}. Performer: ${data.performer_model}.`;
+    if (data.device) note += ` Device: ${data.device}${data.dtype ? ' · ' + data.dtype : ''}.`;
+    if (Array.isArray(data.notes) && data.notes.length) {
+      note += ` ${data.notes.join(' ')}`;
+    }
+    document.getElementById('gptBinoNote').innerHTML = note;
+
+    btn.disabled = false;
+    btn.textContent = 'Run again ↗';
+  } catch (e) {
+    document.getElementById('gptBinoProgress').style.display = 'none';
+    showGptStatus('error', e.message || 'Backend scoring failed.');
+    btn.disabled = false;
+    btn.textContent = 'Try again ↗';
+  }
+}
+
+function showGptStatus(type, msg) {
+  const el = document.getElementById('gptBinoStatus');
+  el.style.display = 'block';
+  const styles = {
+    info:  { bg:'var(--surface2)', border:'var(--border)', color:'var(--muted)' },
+    error: { bg:'var(--red-bg)',   border:'var(--red-border)', color:'var(--red)' },
+  };
+  const s = styles[type] || styles.info;
+  el.style.background = s.bg;
+  el.style.border = `1px solid ${s.border}`;
+  el.style.color = s.color;
+  el.textContent = msg;
+}
+
+function clearAll(){
+  document.getElementById('essayInput').value='';
+  document.getElementById('results').style.display='none';
+  document.getElementById('progress').style.display='none';
+  document.getElementById('errorMsg').style.display='none';
+  document.getElementById('analyseBtn').disabled=false;
+  // Reset GPT bino
+  const gptBtn=document.getElementById('gptBinoBtn');
+  gptBtn.disabled=true; gptBtn.textContent='Analyse essay first';
+  document.getElementById('gptBinoStatus').style.display='none';
+  document.getElementById('gptBinoResult').style.display='none';
+  document.getElementById('gptBinoProgress').style.display='none';
+  const pairEl=document.getElementById('gptBinoPair');
+  if(pairEl) pairEl.textContent='observer / performer';
+}
+
+syncBinoBackendUi();
+</script>
+</body>
+</html>
