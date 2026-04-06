@@ -2,26 +2,55 @@ services:
   - type: web
     name: daniela-bino-backend
     runtime: python
-    plan: standard
+    plan: starter
     rootDir: .
-    buildCommand: pip install -r daniela_bino_requirements.txt
+    buildCommand: >
+      pip install --upgrade pip &&
+      pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu &&
+      pip install -r requirements.txt
     startCommand: uvicorn daniela_bino_backend:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.11
+        value: "3.11.11"
+
+      # ── Models ──────────────────────────────────────────────────────────────
+      # SmolLM2-135M: ~135 MB per model in int8 (total ~300 MB with overhead)
+      # Do NOT change to Qwen 0.5B here — that is 500 MB per model and will OOM.
+      - key: BINO_OBSERVER_MODEL
+        value: HuggingFaceTB/SmolLM2-135M-Instruct
+      - key: BINO_PERFORMER_MODEL
+        value: HuggingFaceTB/SmolLM2-135M
+
+      # ── Memory controls ─────────────────────────────────────────────────────
+      - key: BINO_ENABLE_CPU_QUANTIZATION
+        value: "true"
+      - key: BINO_BATCH_SIZE
+        value: "1"
+      - key: BINO_MAX_LENGTH
+        value: "128"
+      - key: BINO_GENERATION_MAX_LENGTH
+        value: "192"
+
+      # ── Scoring ─────────────────────────────────────────────────────────────
+      - key: BINO_THRESHOLD
+        value: "0.901"
+      - key: BINO_BORDERLINE_MARGIN
+        value: "0.03"
+      - key: BINO_WINDOW_SIZE
+        value: "6"
+
+      # ── Generation caps ─────────────────────────────────────────────────────
+      - key: BINO_REWRITE_CANDIDATES
+        value: "2"
+      - key: BINO_REWRITE_MAX_NEW_TOKENS
+        value: "60"
+
+      # ── CORS ────────────────────────────────────────────────────────────────
+      # Set this to your Render static site URL after first deploy, e.g.:
+      # https://daniela-ai-detection.onrender.com
       - key: BINO_CORS_ORIGINS
         sync: false
-      - key: BINO_OBSERVER_MODEL
-        value: Qwen/Qwen2.5-0.5B-Instruct
-      - key: BINO_PERFORMER_MODEL
-        value: Qwen/Qwen2.5-0.5B
-      - key: BINO_THRESHOLD
-        value: "0.9"
-      - key: BINO_BATCH_SIZE
-        value: "2"
-      - key: BINO_MAX_LENGTH
-        value: "256"
 
   - type: static
     name: daniela-ai-detection

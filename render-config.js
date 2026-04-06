@@ -1,1 +1,1 @@
-window.BINO_BACKEND_URL = 'https://ai-detection-08k7.onrender.com';
+window.BINO_BACKEND_URL = 'http://127.0.0.1:8011';

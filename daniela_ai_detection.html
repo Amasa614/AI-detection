@@ -169,16 +169,11 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
 
 .error-msg { display: none; font-family: var(--mono); font-size: 12px; color: var(--red); margin-top: 10px; }
 
-.local-bino-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(420px, 560px); gap: 28px; align-items: start; }
-.local-bino-sidecard { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 18px; position: sticky; top: 24px; }
+.local-bino-layout { display: block; }
+.local-bino-sidecard { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 18px; }
 .local-bino-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .local-bino-metric { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 12px; }
 .local-bino-sentence-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 5px; }
-
-@media (max-width: 980px) {
-  .local-bino-layout { grid-template-columns: 1fr; }
-  .local-bino-sidecard { position: static; }
-}
 </style>
 </head>
 <body>
@@ -394,30 +389,7 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
     <div class="panel" style="margin-bottom:20px">
       <div class="panel-body">
         <div class="local-bino-layout">
-
-          <div>
-            <div style="font-size:13px;font-weight:500;margin-bottom:6px">How this works</div>
-            <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">This section calls a Python backend that runs two open-weight language models with the same tokenizer and reads their full next-token distributions. That means the score is much closer to the real Binoculars math than the old browser-only API proxy.</div>
-
-            <div style="font-size:13px;font-weight:500;margin-bottom:6px">The formula</div>
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:12px;line-height:1.8">
-              B(s) = log_PPL<sub>M1</sub>(s) / log_X-PPL<sub>M1,M2</sub>(s)<br>
-              <span style="color:var(--muted);font-size:11px">Numerator: how surprised M1 is by the text (observer perplexity)</span><br>
-              <span style="color:var(--muted);font-size:11px">Denominator: cross-perplexity from the observer distribution against the performer distribution</span><br>
-              <span style="color:var(--muted);font-size:11px">Because the backend has full logits for both models, this is materially closer to the paper than the browser-only approximation.</span>
-            </div>
-
-            <div style="font-size:13px;font-weight:500;margin-bottom:6px">Score interpretation</div>
-            <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">Threshold is shown at <strong>0.9</strong> as a starting reference. Since exact score ranges depend on the model pair you run, treat the threshold as configurable rather than universal.</div>
-
-            <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:5px;padding:10px 12px;margin-bottom:0">
-              <div style="font-size:11px;font-weight:500;color:var(--amber);font-family:var(--mono);margin-bottom:4px">First run</div>
-              <div style="font-size:11px;color:var(--amber);line-height:1.5">The first backend request may take a while because Python needs to load the models, and the models may need to download once. After that, scoring should be much more stable than the browser-only proxy.</div>
-            </div>
-          </div>
-
-          <div>
-            <div class="local-bino-sidecard">
+          <div class="local-bino-sidecard">
               <div style="font-size:11px;font-weight:500;color:var(--muted);font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px">Local Binoculars</div>
 
               <label class="label" style="margin-bottom:6px">Backend URL</label>
@@ -440,7 +412,7 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
                   <div class="local-bino-metric">
                     <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">Bino score</div>
                     <div style="font-size:26px;font-weight:500;font-family:var(--mono)" id="gptBinoScore">—</div>
-                    <div style="font-size:10px;color:var(--dim);margin-top:2px">threshold: 0.9</div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:2px">AI threshold: <span id="gptBinoThresholdLabel">0.901</span></div>
                   </div>
                   <div class="local-bino-metric">
                     <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">Verdict</div>
@@ -454,10 +426,10 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
                   <div style="position:relative;height:10px;border-radius:5px;background:linear-gradient(to right,#b42218 0%,#f5bfbb 22%,#fdefc8 40%,#dcf0e5 65%,#1a7a3c 100%);border:1px solid var(--border)">
                     <div id="gptBinoNeedle" style="position:absolute;top:-4px;width:2px;height:18px;background:var(--text);border-radius:1px;transform:translateX(-50%);transition:left .5s ease;left:50%"></div>
                     <!-- threshold marker -->
-                    <div style="position:absolute;top:-2px;height:14px;width:1px;background:var(--red);opacity:0.6;left:45%"></div>
+                    <div id="gptBinoThresholdMarker" style="position:absolute;top:-2px;height:14px;width:1px;background:var(--red);opacity:0.6;left:50%"></div>
                   </div>
                   <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:5px">
-                    <span>0.0 AI</span><span style="color:var(--red)">0.9 threshold</span><span>2.0 human</span>
+                    <span id="gptBinoMinLabel">0.00 AI</span><span id="gptBinoThresholdAxisLabel" style="color:var(--red)">0.901 threshold</span><span id="gptBinoMaxLabel">1.10 human</span>
                   </div>
                 </div>
 
@@ -467,6 +439,40 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
                   <div id="gptSentScores" class="local-bino-sentence-list"></div>
                 </div>
 
+                <div class="grid2" style="margin-top:14px;margin-bottom:10px">
+                  <div class="panel" style="margin-bottom:0">
+                    <div class="panel-header"><span>Local sliding windows</span><span id="gptWindowBadge"></span></div>
+                    <div class="panel-body">
+                      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Each dot = one backend sliding window. Red means the average window score fell below the Binoculars paper cutoff.</div>
+                      <div class="window-grid" id="gptWindowGrid"></div>
+                      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:10px" id="gptWindowDesc"></div>
+                    </div>
+                  </div>
+                  <div class="panel" style="margin-bottom:0">
+                    <div class="panel-header"><span>Local consecutive runs</span><span id="gptRunBadge"></span></div>
+                    <div class="panel-body">
+                      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Red dots mark backend sentence scores below the paper cutoff. Long red runs are your strongest local binoculars warning sign.</div>
+                      <div class="run-visual" id="gptRunVisual"></div>
+                      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:10px" id="gptRunDesc"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel" style="margin-bottom:10px">
+                  <div class="panel-header"><span>Local binoculars red flags</span><span id="gptFlagsBadge"></span></div>
+                  <div class="panel-body" id="gptBinoFlags"></div>
+                </div>
+
+                <div class="panel" style="margin-bottom:10px">
+                  <div class="panel-header"><span>LLM pattern analysis — AI-flagged sentences</span><span id="gptAnalyseBadge"></span></div>
+                  <div class="panel-body" id="gptAnalyseResults"></div>
+                </div>
+
+                <div class="panel" style="margin-bottom:10px">
+                  <div class="panel-header"><span>Rewrite suggestions for AI-prone sentences</span><span id="gptRewriteBadge"></span></div>
+                  <div class="panel-body" id="gptRewriteSuggestions"></div>
+                </div>
+
                 <div id="gptBinoNote" style="font-size:11px;color:var(--muted);line-height:1.6;background:var(--surface2);border:1px solid var(--border);padding:10px 12px;border-radius:5px;margin-top:10px"></div>
               </div>
 
@@ -474,9 +480,7 @@ button { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spa
                 Analyse essay first
               </button>
               <div id="binoBackendHint" style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:7px;text-align:center">set this to your deployed backend, or leave blank to use localhost while developing</div>
-            </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -582,6 +586,144 @@ function renderThresholdBar(container, items){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
+function escapeHtml(value){
+  return String(value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function rewriteAnalysisSignals(sentence){
+  const text = (sentence || '').trim();
+  const lower = text.toLowerCase();
+  const words = text ? text.split(/\s+/).filter(Boolean) : [];
+  const hasStance = /\b(i|my|me|we|our|in my view|i think|i believe)\b/.test(lower);
+  const hasHedge = /\b(may|might|often|sometimes|tends to|can|could|in practice|generally|likely)\b/.test(lower);
+  const hasContrast = /\b(because|however|although|but|while|whereas|yet)\b/.test(lower);
+  const hasComma = /[,;:]/.test(text);
+  const hasCitation = /\([^)]+,\s*\d{4}\)|\(\d{4}\)/.test(text);
+  const hasSpecificity = /\b(for example|for instance|such as|especially|in particular)\b/.test(lower);
+  return [
+    { label: 'stance', value: hasStance ? 'present' : 'missing' },
+    { label: 'hedging', value: hasHedge ? 'present' : 'missing' },
+    { label: 'contrast', value: hasContrast ? 'present' : 'missing' },
+    { label: 'punctuation', value: hasComma ? 'varied' : 'flat' },
+    { label: 'specificity', value: hasSpecificity ? 'present' : 'generic' },
+    { label: 'citation', value: hasCitation ? 'present' : 'none' },
+    { label: 'length', value: `${words.length} words` },
+  ];
+}
+
+function renderRewriteSignals(sentence){
+  const signals = rewriteAnalysisSignals(sentence);
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">` +
+    signals.map(signal => `<span class="badge na">${escapeHtml(signal.label)}: ${escapeHtml(signal.value)}</span>`).join('') +
+    `</div>`;
+}
+
+function computeEssayMetrics(text, options = {}){
+  const words = tokenize(text);
+  const sentences = getSentences(text);
+  const obs3 = options.obs3 || buildNgrams(words,3,0.05);
+  const obs2 = options.obs2 || buildNgrams(words,2,0.2);
+  const scored = options.scored || sentences.map(s=>({s,sc:scoreSent(s,obs3,obs2)})).filter(x=>x.sc!==null);
+  const allSc = scored.map(x=>x.sc);
+  const avgBino = options.avgBino ?? (allSc.length ? mean(allSc) : 0);
+
+  const wins = [];
+  for(let i=0;i<=scored.length-W;i++) wins.push(mean(scored.slice(i,i+W).map(x=>x.sc)));
+  const flaggedWins = wins.filter(m=>m<THR).length;
+  let cur = 0, maxRun = 0;
+  const runMap = allSc.map(x=>{ if(x<-4.35){cur++;maxRun=Math.max(maxRun,cur);return true;} cur=0; return false; });
+
+  const wl = words.length, V100 = wl-99;
+  let mattrS = 0; for(let i=0;i<V100;i++) mattrS += new Set(words.slice(i,i+100)).size/100;
+  const mattr = V100>0 ? mattrS/V100 : 0;
+  const freq = {}; words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  const uniW = Object.keys(freq);
+  const slens = sentences.map(s=>s.split(/\s+/).length);
+  const sentCV = slens.length>1 ? stdev(slens)/mean(slens) : 0;
+  const commas = wl ? (text.match(/,/g)||[]).length/wl*100 : 0;
+  const emDashes = (text.match(/—/g)||[]).length;
+  const fpCount = words.filter(w=>['i','my','me','myself'].includes(w)).length;
+  const fpRatio = wl ? fpCount/wl*100 : 0;
+  const syllCount = words.reduce((a,w)=>{ const v=(w.match(/[aeiou]+/g)||[]).length; return a+Math.max(1,w.endsWith('e')&&!w.endsWith('le')?v-1:v); },0);
+  const fk = slens.length && wl ? 0.39*mean(slens)+11.8*(syllCount/wl)-15.59 : 0;
+
+  const tl = text.toLowerCase();
+  const hedgeW = ['perhaps','possibly','might','may','could','seem','appears','suggest','tend','likely','probably','often','sometimes','generally','usually','typically','arguably','somewhat','fairly','rather','quite'];
+  const hedgeR = wl ? words.filter(w=>hedgeW.includes(w)).length/wl*100 : 0;
+  const boostW = ['clearly','obviously','certainly','definitely','always','never','absolutely','completely','entirely','fundamentally','crucial','essential','critical','vital'];
+  const boostR = wl ? words.filter(w=>boostW.includes(w)).length/wl*100 : 0;
+  const guidePh = ['in summary','in conclusion','furthermore','moreover','additionally','in addition','however','nevertheless','therefore','thus','not only','but also','finally','lastly'];
+  const guideC = sentences.length ? guidePh.reduce((a,p)=>a+(tl.split(p).length-1),0)/sentences.length*100 : 0;
+  const stanceM = ['i think','i believe','i find','in my view','i kept','i used to','in my reading','what strikes me','what i think','what i find','if i had to','in my experience'];
+  const stanceC = stanceM.reduce((a,m)=>a+(tl.split(m).length-1),0);
+  const paras = text.split('\n').map(l=>l.trim()).filter(l=>l.split(/\s+/).length>20);
+  const paraLens = paras.map(p=>p.split(/\s+/).length);
+  const paraCV = paraLens.length>1 ? stdev(paraLens)/mean(paraLens) : 0;
+
+  const named = ['ghana','accra','fayol','donabedian','sharif','mckinsey','valiotis','tiyetibo','mccalman','bombard','liebler','akan','ewe','taylor','weber','mayo','deming'];
+  const nameH = named.reduce((a,n)=>a+(tl.split(n).length-1),0);
+  const expM = ['i have come across','i kept noticing','i used to think','in my view','what strikes me','what i find','if i had to','in my experience','in my reading'];
+  const expC = expM.reduce((a,m)=>a+(tl.split(m).length-1),0);
+  const caveatW = ['but','however','although','though','in practice','depends on','not necessarily'];
+  const caveatC = caveatW.reduce((a,w)=>a+(tl.split(w).length-1),0);
+  const citations = (text.match(/\([A-Z][a-z]+.*?\d{4}\)/g)||[]).length;
+
+  const perps = sentences.map(s=>{ const t=tokenize(s); if(t.length<4)return null; const tp=['<s>','<s>',...t],ol=[]; for(let i=2;i<tp.length;i++) ol.push(obs3([tp[i-2],tp[i-1]],tp[i])); return Math.exp(-ol.reduce((a,b)=>a+b,0)/ol.length); }).filter(x=>x!==null);
+  const avgPerp = perps.length ? mean(perps) : 0;
+  const perpStd = perps.length>1 ? stdev(perps) : 0;
+  const bm = {}; for(let i=0;i<wl-1;i++){ if(!bm[words[i]])bm[words[i]]={}; bm[words[i]][words[i+1]]=(bm[words[i]][words[i+1]]||0)+1; }
+  const top1 = words.slice(0,-1).filter((w,i)=>{ const d=bm[w]||{}; const b=Object.entries(d).sort((a,c)=>c[1]-a[1])[0]; return b&&b[0]===words[i+1]; }).length;
+  const top1R = top1/Math.max(wl-1,1);
+  const fwSet = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','is','are','was','were','be','been','have','has','had','do','does','did','will','would','could','should','may','might','can','it','its','that','this','which','who','what','if','as','by','from','not','no','so','they','we','our','us','me','my','i','you','also','just','very','more','all','some','any','many','other','then','there']);
+  let paraFlags = 0; paras.forEach(p=>{ const ps=getSentences(p); if(ps.length<2)return; const psl=ps.map(s=>s.split(/\s+/).length); const lb=stdev(psl); const psc=ps.map(s=>scoreSent(s,obs3,obs2)).filter(x=>x!==null&&x>-5); if(psc.length&&(mean(psc)<THR||lb<5))paraFlags++; });
+  const spinnerFP = sentences.filter(s=>{ const sw=tokenize(s); if(sw.length<8)return false; const fwR=sw.filter(w=>fwSet.has(w)).length/sw.length; const cw=sw.filter(w=>!fwSet.has(w)); const rC=cw.filter(w=>(freq[w]||0)<=2).length; return fwR>0.60&&(rC/Math.max(cw.length,1))>0.40; }).length;
+
+  return {
+    words, sentences, obs3, obs2, scored, allSc, avgBino, wins, flaggedWins, runMap, maxRun,
+    wl, freq, uniW, slens, mattr, sentCV, commas, emDashes, fpCount, fpRatio, fk,
+    hedgeR, boostR, guideC, stanceC, paras, paraCV,
+    nameH, expC, caveatC, citations,
+    avgPerp, perpStd, top1R, spinnerFP, paraFlags
+  };
+}
+
+function renderFamilyBars(prefix, metrics, binoScoreOverride){
+  renderThresholdBar(prefix + '1bars',[
+    {label:'MATTR-100 (lexical diversity)',val:metrics.mattr,display:metrics.mattr.toFixed(3),good:0.70,bad:0.65,hi:true,min:0.5,max:0.9,humanMin:0.70,humanMax:0.90,goodLabel:'0.70',badLabel:'0.65',context:'human: 0.70–0.82'},
+    {label:'First-person % (personal voice)',val:metrics.fpRatio,display:metrics.fpRatio.toFixed(2)+'%',good:0.9,bad:0.5,hi:true,min:0,max:4,humanMin:0.9,humanMax:4,goodLabel:'0.9%',badLabel:'0.5%',context:'human: >1.0%'},
+    {label:'Sentence length CV (variation)',val:metrics.sentCV,display:metrics.sentCV.toFixed(3),good:0.40,bad:0.30,hi:true,min:0.1,max:0.8,humanMin:0.40,humanMax:0.8,goodLabel:'0.40',badLabel:'0.30',context:'human: >0.40'},
+    {label:'Comma density /100 words',val:metrics.commas,display:metrics.commas.toFixed(1),good:5,bad:4,hi:true,min:0,max:15,humanMin:5,humanMax:12,goodLabel:'5',badLabel:'4',context:'human: 5–12'},
+    {label:'Flesch-Kincaid grade level',val:metrics.fk,display:metrics.fk.toFixed(1),good:12,bad:10,hi:true,min:6,max:20,humanMin:12,humanMax:18,goodLabel:'12',badLabel:'10',context:'academic: 12–18'},
+    {label:'Em dashes (must be zero)',val:metrics.emDashes,display:String(metrics.emDashes),good:0,bad:2,hi:false,min:0,max:8,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'2',context:'target: 0'},
+  ]);
+  renderThresholdBar(prefix + '2bars',[
+    {label:'Hedge ratio /100w (uncertainty)',val:metrics.hedgeR,display:metrics.hedgeR.toFixed(2),good:1.5,bad:0.8,hi:true,min:0,max:6,humanMin:1.5,humanMax:6,goodLabel:'1.5',badLabel:'0.8',context:'human academic: 2–6'},
+    {label:'Booster ratio /100w (certainty)',val:metrics.boostR,display:metrics.boostR.toFixed(2),good:2.0,bad:3.0,hi:false,min:0,max:5,humanMin:0,humanMax:2.0,goodLabel:'2.0',badLabel:'3.0',context:'AI overuses: >2.0'},
+    {label:'Reader-guidance /100s',val:metrics.guideC,display:metrics.guideC.toFixed(1),good:25,bad:40,hi:false,min:0,max:60,humanMin:0,humanMax:25,goodLabel:'25',badLabel:'40',context:'AI heavy: >25'},
+    {label:'Stance markers (personal voice)',val:metrics.stanceC,display:String(metrics.stanceC),good:4,bad:2,hi:true,min:0,max:20,humanMin:4,humanMax:20,goodLabel:'4',badLabel:'2',context:'human: >4'},
+    {label:'Paragraph length CV',val:metrics.paraCV,display:metrics.paraCV.toFixed(3),good:0.25,bad:0.15,hi:true,min:0,max:0.6,humanMin:0.25,humanMax:0.6,goodLabel:'0.25',badLabel:'0.15',context:'human: >0.25'},
+  ]);
+  renderThresholdBar(prefix + '3bars',[
+    {label:'Named entity hits (groundedness)',val:metrics.nameH,display:String(metrics.nameH),good:8,bad:4,hi:true,min:0,max:25,humanMin:8,humanMax:25,goodLabel:'8',badLabel:'4',context:'higher = more grounded'},
+    {label:'Personal experience markers',val:metrics.expC,display:String(metrics.expC),good:5,bad:2,hi:true,min:0,max:15,humanMin:5,humanMax:15,goodLabel:'5',badLabel:'2',context:'human: >5'},
+    {label:'Caveat/qualification density',val:metrics.caveatC,display:String(metrics.caveatC),good:20,bad:10,hi:true,min:0,max:60,humanMin:20,humanMax:60,goodLabel:'20',badLabel:'10',context:'humans qualify claims'},
+    {label:'Citation count',val:metrics.citations,display:String(metrics.citations),good:3,bad:1,hi:true,min:0,max:15,humanMin:3,humanMax:15,goodLabel:'3',badLabel:'1',context:'academic: >5'},
+  ]);
+  renderThresholdBar(prefix + '4bars',[
+    {label:'Avg perplexity (unpredictability)',val:metrics.avgPerp,display:metrics.avgPerp.toFixed(1),good:60,bad:45,hi:true,min:20,max:120,humanMin:60,humanMax:120,goodLabel:'60',badLabel:'45',context:'human: >60, AI: <50'},
+    {label:'Perplexity stdev (variance)',val:metrics.perpStd,display:metrics.perpStd.toFixed(1),good:20,bad:10,hi:true,min:0,max:50,humanMin:20,humanMax:50,goodLabel:'20',badLabel:'10',context:'human: >30, AI: <15'},
+    {label:'Avg bino score',val:binoScoreOverride ?? metrics.avgBino,display:(binoScoreOverride ?? metrics.avgBino).toFixed(4),good:-4.35,bad:-4.45,hi:true,min:-5,max:-3,humanMin:-4.35,humanMax:-3,goodLabel:'−4.35',badLabel:'−4.45',context:'AI flag: <−4.45'},
+    {label:'Top-1 bigram prediction rate',val:metrics.top1R,display:metrics.top1R.toFixed(3),good:0.38,bad:0.42,hi:false,min:0.2,max:0.6,humanMin:0.2,humanMax:0.38,goodLabel:'0.38',badLabel:'0.42',context:'AI: >0.38'},
+    {label:'Spinner fingerprints',val:metrics.spinnerFP,display:String(metrics.spinnerFP),good:0,bad:3,hi:false,min:0,max:8,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'3',context:'0 = clean'},
+    {label:'Paragraph-level flags',val:metrics.paraFlags,display:String(metrics.paraFlags),good:0,bad:3,hi:false,min:0,max:10,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'3',context:'target: 0'},
+  ]);
+}
+
 async function runAnalysis(){
   const text=document.getElementById('essayInput').value.trim();
   const errEl=document.getElementById('errorMsg');
@@ -596,71 +738,19 @@ async function runAnalysis(){
   const msgs=['Building language model from essay...','Scoring sentences with bino algorithm...','Running 6-sentence window analysis...','Checking consecutive aggregation runs...','Computing surface & stylometric metrics...','Computing discourse & pragmatic signals...','Computing epistemic & content cues...','Computing predictability metrics...','Detecting paraphrase fingerprints...','Generating prioritised recommendations...','Rendering dashboard...'];
   for(const m of msgs){ prog.textContent=m; await sleep(100); }
 
-  const obs3=buildNgrams(words,3,0.05), obs2=buildNgrams(words,2,0.2);
-  const sentences=getSentences(text);
-  const scored=sentences.map(s=>({s,sc:scoreSent(s,obs3,obs2)})).filter(x=>x.sc!==null);
-  const allSc=scored.map(x=>x.sc), avgBino=mean(allSc);
-
-  const wins=[]; for(let i=0;i<=scored.length-W;i++) wins.push(mean(scored.slice(i,i+W).map(x=>x.sc)));
-  const flaggedWins=wins.filter(m=>m<THR).length;
+  const metrics = computeEssayMetrics(text);
+  const {
+    sentences, scored, allSc, avgBino, wins, flaggedWins, runMap, maxRun,
+    wl, freq, uniW, slens, sentCV, emDashes, fpCount, fpRatio, paras,
+    hedgeR, stanceC, citations, avgPerp, perpStd, spinnerFP, paraFlags
+  } = metrics;
   const deepCount=allSc.filter(x=>x<DEEP).length;
-  let cur=0,maxRun=0;
-  const runMap=allSc.map(x=>{ if(x<-4.35){cur++;maxRun=Math.max(maxRun,cur);return true;}else{cur=0;return false;} });
-
-  // Family 1
-  const wl=words.length, V100=wl-99;
-  let mattrS=0; for(let i=0;i<V100;i++) mattrS+=new Set(words.slice(i,i+100)).size/100;
-  const mattr=V100>0?mattrS/V100:0;
-  const freq={}; words.forEach(w=>freq[w]=(freq[w]||0)+1);
-  const uniW=Object.keys(freq);
-  const hapax=uniW.filter(w=>freq[w]===1).length/uniW.length;
-  const slens=sentences.map(s=>s.split(/\s+/).length);
-  const sentCV=slens.length>1?stdev(slens)/mean(slens):0;
-  const commas=(text.match(/,/g)||[]).length/wl*100;
-  const emDashes=(text.match(/—/g)||[]).length;
-  const fpCount=words.filter(w=>['i','my','me','myself'].includes(w)).length;
-  const fpRatio=fpCount/wl*100;
-  const syllCount=words.reduce((a,w)=>{ const v=(w.match(/[aeiou]+/g)||[]).length; return a+Math.max(1,w.endsWith('e')&&!w.endsWith('le')?v-1:v); },0);
-  const fk=0.39*mean(slens)+11.8*(syllCount/wl)-15.59;
-
-  // Family 2
-  const tl=text.toLowerCase();
-  const hedgeW=['perhaps','possibly','might','may','could','seem','appears','suggest','tend','likely','probably','often','sometimes','generally','usually','typically','arguably','somewhat','fairly','rather','quite'];
-  const hedgeR=words.filter(w=>hedgeW.includes(w)).length/wl*100;
-  const boostW=['clearly','obviously','certainly','definitely','always','never','absolutely','completely','entirely','fundamentally','crucial','essential','critical','vital'];
-  const boostR=words.filter(w=>boostW.includes(w)).length/wl*100;
-  const guidePh=['in summary','in conclusion','furthermore','moreover','additionally','in addition','however','nevertheless','therefore','thus','not only','but also','finally','lastly'];
-  const guideC=guidePh.reduce((a,p)=>a+(tl.split(p).length-1),0)/sentences.length*100;
-  const stanceM=['i think','i believe','i find','in my view','i kept','i used to','in my reading','what strikes me','what i think','what i find','if i had to','in my experience'];
-  const stanceC=stanceM.reduce((a,m)=>a+(tl.split(m).length-1),0);
-  const paras=text.split('\n').map(l=>l.trim()).filter(l=>l.split(/\s+/).length>20);
-  const paraLens=paras.map(p=>p.split(/\s+/).length);
-  const paraCV=paraLens.length>1?stdev(paraLens)/mean(paraLens):0;
-
-  // Family 3
-  const named=['ghana','accra','fayol','donabedian','sharif','mckinsey','valiotis','tiyetibo','mccalman','bombard','liebler','akan','ewe','taylor','weber','mayo','deming'];
-  const nameH=named.reduce((a,n)=>a+(tl.split(n).length-1),0);
-  const expM=['i have come across','i kept noticing','i used to think','in my view','what strikes me','what i find','if i had to','in my experience','in my reading'];
-  const expC=expM.reduce((a,m)=>a+(tl.split(m).length-1),0);
-  const caveatW=['but','however','although','though','in practice','depends on','not necessarily'];
-  const caveatC=caveatW.reduce((a,w)=>a+(tl.split(w).length-1),0);
-  const citations=(text.match(/\([A-Z][a-z]+.*?\d{4}\)/g)||[]).length;
-
-  // Family 4
-  const perps=sentences.map(s=>{ const t=tokenize(s); if(t.length<4)return null; const tp=['<s>','<s>',...t],ol=[]; for(let i=2;i<tp.length;i++) ol.push(obs3([tp[i-2],tp[i-1]],tp[i])); return Math.exp(-ol.reduce((a,b)=>a+b,0)/ol.length); }).filter(x=>x!==null);
-  const avgPerp=perps.length?mean(perps):0, perpStd=perps.length>1?stdev(perps):0;
-  const bm={}; for(let i=0;i<wl-1;i++){ if(!bm[words[i]])bm[words[i]]={}; bm[words[i]][words[i+1]]=(bm[words[i]][words[i+1]]||0)+1; }
-  const top1=words.slice(0,-1).filter((w,i)=>{ const d=bm[w]||{}; const b=Object.entries(d).sort((a,c)=>c[1]-a[1])[0]; return b&&b[0]===words[i+1]; }).length;
-  const top1R=top1/Math.max(wl-1,1);
-  const fwSet=new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','is','are','was','were','be','been','have','has','had','do','does','did','will','would','could','should','may','might','can','it','its','that','this','which','who','what','if','as','by','from','not','no','so','they','we','our','us','me','my','i','you','also','just','very','more','all','some','any','many','other','then','there']);
-  let paraFlags=0; paras.forEach(p=>{ const ps=getSentences(p); if(ps.length<2)return; const psl=ps.map(s=>s.split(/\s+/).length); const lb=stdev(psl); const psc=ps.map(s=>scoreSent(s,obs3,obs2)).filter(x=>x!==null&&x>-5); if(psc.length&&(mean(psc)<THR||lb<5))paraFlags++; });
-  const spinnerFP=sentences.filter(s=>{ const sw=tokenize(s); if(sw.length<8)return false; const fwR=sw.filter(w=>fwSet.has(w)).length/sw.length; const cw=sw.filter(w=>!fwSet.has(w)); const rC=cw.filter(w=>(freq[w]||0)<=2).length; return fwR>0.60&&(rC/Math.max(cw.length,1))>0.40; }).length;
 
   // ── SCORING ──
   const checks=[
-    {v:mattr,g:0.70,b:0.65,hi:true},{v:fpRatio,g:0.9,b:0.5,hi:true},{v:sentCV,g:0.40,b:0.30,hi:true},
-    {v:hedgeR,g:1.5,b:0.8,hi:true},{v:boostR,g:2.0,b:3.0,hi:false},{v:guideC,g:25,b:40,hi:false},
-    {v:stanceC,g:4,b:2,hi:true},{v:expC,g:5,b:2,hi:true},{v:avgPerp,g:60,b:45,hi:true},
+    {v:metrics.mattr,g:0.70,b:0.65,hi:true},{v:fpRatio,g:0.9,b:0.5,hi:true},{v:sentCV,g:0.40,b:0.30,hi:true},
+    {v:hedgeR,g:1.5,b:0.8,hi:true},{v:metrics.boostR,g:2.0,b:3.0,hi:false},{v:metrics.guideC,g:25,b:40,hi:false},
+    {v:stanceC,g:4,b:2,hi:true},{v:metrics.expC,g:5,b:2,hi:true},{v:avgPerp,g:60,b:45,hi:true},
     {v:perpStd,g:20,b:10,hi:true},{v:avgBino,g:-4.35,b:-4.45,hi:true},
     {v:flaggedWins,g:3,b:10,hi:false},{v:maxRun,g:3,b:4,hi:false},
     {v:spinnerFP,g:0,b:3,hi:false},{v:paraFlags,g:0,b:3,hi:false},{v:emDashes,g:0,b:2,hi:false},
@@ -717,35 +807,7 @@ async function runAnalysis(){
   document.getElementById('m3badge').innerHTML=`<span class="badge ${risk(maxRun,3,4,false)}">${maxRun} max</span>`;
 
   // ── FAMILY BARS ──
-  renderThresholdBar('f1bars',[
-    {label:'MATTR-100 (lexical diversity)',val:mattr,display:mattr.toFixed(3),good:0.70,bad:0.65,hi:true,min:0.5,max:0.9,humanMin:0.70,humanMax:0.90,goodLabel:'0.70',badLabel:'0.65',context:'human: 0.70–0.82'},
-    {label:'First-person % (personal voice)',val:fpRatio,display:fpRatio.toFixed(2)+'%',good:0.9,bad:0.5,hi:true,min:0,max:4,humanMin:0.9,humanMax:4,goodLabel:'0.9%',badLabel:'0.5%',context:'human: >1.0%'},
-    {label:'Sentence length CV (variation)',val:sentCV,display:sentCV.toFixed(3),good:0.40,bad:0.30,hi:true,min:0.1,max:0.8,humanMin:0.40,humanMax:0.8,goodLabel:'0.40',badLabel:'0.30',context:'human: >0.40'},
-    {label:'Comma density /100 words',val:commas,display:commas.toFixed(1),good:5,bad:4,hi:true,min:0,max:15,humanMin:5,humanMax:12,goodLabel:'5',badLabel:'4',context:'human: 5–12'},
-    {label:'Flesch-Kincaid grade level',val:fk,display:fk.toFixed(1),good:12,bad:10,hi:true,min:6,max:20,humanMin:12,humanMax:18,goodLabel:'12',badLabel:'10',context:'academic: 12–18'},
-    {label:'Em dashes (must be zero)',val:emDashes,display:String(emDashes),good:0,bad:2,hi:false,min:0,max:8,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'2',context:'target: 0'},
-  ]);
-  renderThresholdBar('f2bars',[
-    {label:'Hedge ratio /100w (uncertainty)',val:hedgeR,display:hedgeR.toFixed(2),good:1.5,bad:0.8,hi:true,min:0,max:6,humanMin:1.5,humanMax:6,goodLabel:'1.5',badLabel:'0.8',context:'human academic: 2–6'},
-    {label:'Booster ratio /100w (certainty)',val:boostR,display:boostR.toFixed(2),good:2.0,bad:3.0,hi:false,min:0,max:5,humanMin:0,humanMax:2.0,goodLabel:'2.0',badLabel:'3.0',context:'AI overuses: >2.0'},
-    {label:'Reader-guidance /100s',val:guideC,display:guideC.toFixed(1),good:25,bad:40,hi:false,min:0,max:60,humanMin:0,humanMax:25,goodLabel:'25',badLabel:'40',context:'AI heavy: >25'},
-    {label:'Stance markers (personal voice)',val:stanceC,display:String(stanceC),good:4,bad:2,hi:true,min:0,max:20,humanMin:4,humanMax:20,goodLabel:'4',badLabel:'2',context:'human: >4'},
-    {label:'Paragraph length CV',val:paraCV,display:paraCV.toFixed(3),good:0.25,bad:0.15,hi:true,min:0,max:0.6,humanMin:0.25,humanMax:0.6,goodLabel:'0.25',badLabel:'0.15',context:'human: >0.25'},
-  ]);
-  renderThresholdBar('f3bars',[
-    {label:'Named entity hits (groundedness)',val:nameH,display:String(nameH),good:8,bad:4,hi:true,min:0,max:25,humanMin:8,humanMax:25,goodLabel:'8',badLabel:'4',context:'higher = more grounded'},
-    {label:'Personal experience markers',val:expC,display:String(expC),good:5,bad:2,hi:true,min:0,max:15,humanMin:5,humanMax:15,goodLabel:'5',badLabel:'2',context:'human: >5'},
-    {label:'Caveat/qualification density',val:caveatC,display:String(caveatC),good:20,bad:10,hi:true,min:0,max:60,humanMin:20,humanMax:60,goodLabel:'20',badLabel:'10',context:'humans qualify claims'},
-    {label:'Citation count',val:citations,display:String(citations),good:3,bad:1,hi:true,min:0,max:15,humanMin:3,humanMax:15,goodLabel:'3',badLabel:'1',context:'academic: >5'},
-  ]);
-  renderThresholdBar('f4bars',[
-    {label:'Avg perplexity (unpredictability)',val:avgPerp,display:avgPerp.toFixed(1),good:60,bad:45,hi:true,min:20,max:120,humanMin:60,humanMax:120,goodLabel:'60',badLabel:'45',context:'human: >60, AI: <50'},
-    {label:'Perplexity stdev (variance)',val:perpStd,display:perpStd.toFixed(1),good:20,bad:10,hi:true,min:0,max:50,humanMin:20,humanMax:50,goodLabel:'20',badLabel:'10',context:'human: >30, AI: <15'},
-    {label:'Avg bino score',val:avgBino,display:avgBino.toFixed(4),good:-4.35,bad:-4.45,hi:true,min:-5,max:-3,humanMin:-4.35,humanMax:-3,goodLabel:'−4.35',badLabel:'−4.45',context:'AI flag: <−4.45'},
-    {label:'Top-1 bigram prediction rate',val:top1R,display:top1R.toFixed(3),good:0.38,bad:0.42,hi:false,min:0.2,max:0.6,humanMin:0.2,humanMax:0.38,goodLabel:'0.38',badLabel:'0.42',context:'AI: >0.38'},
-    {label:'Spinner fingerprints',val:spinnerFP,display:String(spinnerFP),good:0,bad:3,hi:false,min:0,max:8,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'3',context:'0 = clean'},
-    {label:'Paragraph-level flags',val:paraFlags,display:String(paraFlags),good:0,bad:3,hi:false,min:0,max:10,humanMin:0,humanMax:0,goodLabel:'0',badLabel:'3',context:'target: 0'},
-  ]);
+  renderFamilyBars('f', metrics);
 
   // ── NEXT STEPS ──
   const issues=[];
@@ -799,7 +861,22 @@ async function runAnalysis(){
 
 // ── LOCAL BINOCULARS BACKEND ────────────────────────────────────────────────
 const BINO_LOCAL_FALLBACK_URL = 'http://127.0.0.1:8008';
-const BINO_THRESHOLD = 0.9;
+const BINO_THRESHOLD = 0.901;
+const BINO_BORDERLINE_MARGIN = 0.03;
+const BINO_VISUAL_MIN = 0.0;
+const BINO_VISUAL_MAX = 1.1;
+
+function getLocalBinoFallbackUrl() {
+  const isLocalHost = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
+  if (!isLocalHost) return '';
+
+  const currentPort = Number(window.location.port || 0);
+  if (currentPort === 8010) {
+    return `http://${window.location.hostname}:8011`;
+  }
+
+  return BINO_LOCAL_FALLBACK_URL;
+}
 
 function getConfiguredBackendUrl() {
   const fromMeta = document.querySelector('meta[name="bino-backend-url"]')?.content?.trim();
@@ -812,10 +889,8 @@ function getConfiguredBackendUrl() {
   const fromQuery = (params.get('backendUrl') || '').trim();
   if (fromQuery) return fromQuery;
 
-  const isLocalHost = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
-  if (isLocalHost) {
-    return BINO_LOCAL_FALLBACK_URL;
-  }
+  const localFallback = getLocalBinoFallbackUrl();
+  if (localFallback) return localFallback;
 
   return '';
 }
@@ -830,7 +905,7 @@ function syncBinoBackendUi() {
   }
 
   const effectiveUrl = input.value.trim();
-  const isLocal = effectiveUrl === BINO_LOCAL_FALLBACK_URL;
+  const isLocal = effectiveUrl === getLocalBinoFallbackUrl() || effectiveUrl === BINO_LOCAL_FALLBACK_URL;
   hint.textContent = effectiveUrl
     ? (isLocal
         ? 'using localhost for local development'
@@ -840,7 +915,7 @@ function syncBinoBackendUi() {
 
 function getBinoBackendBaseUrl() {
   const input = document.getElementById('binoBackendUrl');
-  const raw = (input?.value || getConfiguredBackendUrl() || BINO_LOCAL_FALLBACK_URL).trim().replace(/\/+$/,'');
+  const raw = (input?.value || getConfiguredBackendUrl() || getLocalBinoFallbackUrl() || BINO_LOCAL_FALLBACK_URL).trim().replace(/\/+$/,'');
   if (!/^https?:\/\//i.test(raw)) {
     throw new Error('Backend URL must start with http:// or https://');
   }
@@ -866,6 +941,64 @@ async function callBinoBackend(text) {
   return data;
 }
 
+async function requestBinoRewrites(sentences) {
+  const baseUrl = getBinoBackendBaseUrl();
+  const resp = await fetch(`${baseUrl}/rewrite-suggestions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sentences,
+      candidate_count: 3,
+      max_new_tokens: 80,
+      max_length: 128
+    })
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error(data?.detail || `Rewrite request failed (${resp.status})`);
+  }
+  return data;
+}
+
+const PATTERN_LABEL_META = {
+  'formulaic':         { color: 'var(--red)',   icon: '⊡', desc: 'Formulaic structure' },
+  'no-personal-voice': { color: 'var(--amber)', icon: '◌', desc: 'No personal voice' },
+  'ungrounded':        { color: 'var(--red)',   icon: '◈', desc: 'Ungrounded claim' },
+  'uniform-rhythm':    { color: 'var(--amber)', icon: '≡', desc: 'Uniform rhythm' },
+  'over-hedged':       { color: 'var(--amber)', icon: '∿', desc: 'Over-hedged' },
+  'missing-contrast':  { color: 'var(--amber)', icon: '⊘', desc: 'Missing contrast' },
+  'citation-style':    { color: 'var(--muted)', icon: '⊞', desc: 'Citation / reference' },
+  'ai-pattern':        { color: 'var(--red)',   icon: '⚑', desc: 'AI pattern' },
+};
+
+async function requestBinoAnalyse(sentences, binoScores) {
+  const baseUrl = getBinoBackendBaseUrl();
+  const resp = await fetch(`${baseUrl}/analyse`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sentences, bino_scores: binoScores, max_new_tokens: 60 })
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data?.detail || `Analysis request failed (${resp.status})`);
+  return data;
+}
+
+function renderPatternCard(item, index, total) {
+  const meta = PATTERN_LABEL_META[item.pattern_label] || PATTERN_LABEL_META['ai-pattern'];
+  const score = Number(item.bino_score);
+  const scoreTxt = Number.isFinite(score) ? score.toFixed(4) : 'n/a';
+  return `<div style="padding:14px 0;border-bottom:${index < total - 1 ? '1px solid var(--border)' : 'none'}">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:15px;color:${meta.color}">${meta.icon}</span>
+      <span style="font-size:11px;font-weight:600;color:${meta.color};font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">${meta.desc}</span>
+      <span style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-left:auto">bino: ${scoreTxt}</span>
+    </div>
+    <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px;padding:8px 10px;border-left:2px solid ${meta.color};background:var(--surface)">${escapeHtml(item.sentence)}</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.5;font-style:italic">${escapeHtml(item.explanation)}</div>
+  </div>`;
+}
+
 async function runGptBinoculars() {
   const text = document.getElementById('essayInput').value.trim();
   if (!text) return;
@@ -884,10 +1017,12 @@ async function runGptBinoculars() {
     const data = await callBinoBackend(text);
     const results = data.sentence_scores || [];
     if (!results.length) throw new Error('Backend returned no sentence scores.');
+    const localMetrics = computeEssayMetrics(text);
 
     const avgBino = Number(data.document_score);
     const threshold = Number(data.threshold || BINO_THRESHOLD);
-    const verdict = data.document_verdict || (avgBino < threshold ? 'ai' : avgBino < 1.1 ? 'borderline' : 'human');
+    const borderlineCeiling = Number(data.borderline_ceiling || (threshold + BINO_BORDERLINE_MARGIN));
+    const verdict = data.document_verdict || (avgBino < threshold ? 'ai' : avgBino < borderlineCeiling ? 'borderline' : 'human');
     const isAI = verdict === 'ai';
 
     document.getElementById('gptProgressBar').style.width = '100%';
@@ -902,35 +1037,193 @@ async function runGptBinoculars() {
 
     const scoreEl = document.getElementById('gptBinoScore');
     scoreEl.textContent = avgBino.toFixed(4);
-    const col = isAI ? 'var(--red)' : avgBino < 1.1 ? 'var(--amber)' : 'var(--green)';
+    const col = isAI ? 'var(--red)' : avgBino < borderlineCeiling ? 'var(--amber)' : 'var(--green)';
     scoreEl.style.color = col;
+    document.getElementById('gptBinoThresholdLabel').textContent = threshold.toFixed(2);
+    document.getElementById('gptBinoThresholdAxisLabel').textContent = `${threshold.toFixed(3)} threshold`;
+    document.getElementById('gptBinoMinLabel').textContent = `${BINO_VISUAL_MIN.toFixed(2)} AI`;
+    document.getElementById('gptBinoMaxLabel').textContent = `${BINO_VISUAL_MAX.toFixed(2)} human`;
 
     const verdictEl = document.getElementById('gptBinoVerdict');
-    verdictEl.textContent = isAI ? '⚠ AI-Generated' : avgBino < 1.1 ? '~ Borderline' : '✓ Human-Written';
+    verdictEl.textContent = isAI ? '⚠ AI-Generated' : avgBino < borderlineCeiling ? '~ Borderline' : '✓ Human-Written';
     verdictEl.style.color = col;
 
-    const needlePct = Math.max(2, Math.min(98, avgBino / 2.0 * 100));
+    const thresholdPct = Math.max(2, Math.min(98, (threshold - BINO_VISUAL_MIN) / (BINO_VISUAL_MAX - BINO_VISUAL_MIN) * 100));
+    document.getElementById('gptBinoThresholdMarker').style.left = thresholdPct + '%';
+    const needlePct = Math.max(2, Math.min(98, (avgBino - BINO_VISUAL_MIN) / (BINO_VISUAL_MAX - BINO_VISUAL_MIN) * 100));
     document.getElementById('gptBinoNeedle').style.left = needlePct + '%';
 
     const sentEl = document.getElementById('gptSentScores');
     sentEl.innerHTML = results.map(r => {
       const b = Number(r.bino);
-      const rc = b < 0.85 ? 'var(--red)' : b < threshold ? 'var(--amber)' : 'var(--green)';
-      const lbl = b < 0.85 ? 'AI' : b < threshold ? 'borderline' : 'human';
+      const rc = b < threshold ? 'var(--red)' : b < borderlineCeiling ? 'var(--amber)' : 'var(--green)';
+      const lbl = b < threshold ? 'AI' : b < borderlineCeiling ? 'borderline' : 'human';
       return `<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:start">
         <div>
           <div style="font-family:var(--mono);font-size:12px;font-weight:500;color:${rc}">${b.toFixed(4)}</div>
-          <div style="font-size:9px;padding:1px 5px;border-radius:2px;display:inline-block;margin-top:2px;font-family:var(--mono);background:${b<0.85?'var(--red-bg)':b<threshold?'var(--amber-bg)':'var(--green-bg)'};color:${rc};border:1px solid ${b<0.85?'var(--red-border)':b<threshold?'var(--amber-border)':'var(--green-border)'};">${lbl}</div>
+          <div style="font-size:9px;padding:1px 5px;border-radius:2px;display:inline-block;margin-top:2px;font-family:var(--mono);background:${b<threshold?'var(--red-bg)':b<borderlineCeiling?'var(--amber-bg)':'var(--green-bg)'};color:${rc};border:1px solid ${b<threshold?'var(--red-border)':b<borderlineCeiling?'var(--amber-border)':'var(--green-border)'};">${lbl}</div>
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.5">${r.sentence.substring(0,110)}${r.sentence.length>110?'…':''}</div>
       </div>`;
     }).join('');
 
+    const sentenceBinos = results.map(r => Number(r.bino)).filter(Number.isFinite);
+    const windowSize = Math.max(1, Math.min(Number(data.window_size || 6), sentenceBinos.length || 1));
+    const gptWins = [];
+    for (let i = 0; i <= sentenceBinos.length - windowSize; i++) {
+      gptWins.push(sentenceBinos.slice(i, i + windowSize).reduce((a, b) => a + b, 0) / windowSize);
+    }
+    const flaggedWindows = gptWins.filter(score => score < threshold).length;
+    const windowRisk = gptWins.length === 0 ? 'na' : flaggedWindows === 0 ? 'pass' : flaggedWindows <= Math.max(1, Math.floor(gptWins.length * 0.15)) ? 'amber' : 'fail';
+    document.getElementById('gptWindowGrid').innerHTML = gptWins.map((score, index) => {
+      const color = score < threshold ? 'var(--red)' : score < borderlineCeiling ? '#d4a017' : 'var(--green)';
+      return `<div class="win-dot" style="background:${color}" data-tip="W${index + 1}: ${score.toFixed(4)}"></div>`;
+    }).join('');
+    document.getElementById('gptWindowBadge').innerHTML = gptWins.length
+      ? `<span class="badge ${windowRisk}">${flaggedWindows}/${gptWins.length} flagged</span>`
+      : '<span class="badge na">n/a</span>';
+    document.getElementById('gptWindowDesc').textContent = gptWins.length
+      ? `Weakest ${windowSize}-sentence window: ${Math.min(...gptWins).toFixed(4)}.`
+      : 'Not enough scored sentences for a window summary.';
+
+    let currentRun = 0;
+    let maxRun = 0;
+    const gptRunMap = sentenceBinos.map(score => {
+      if (score < threshold) {
+        currentRun += 1;
+        maxRun = Math.max(maxRun, currentRun);
+        return true;
+      }
+      currentRun = 0;
+      return false;
+    });
+    const runRisk = maxRun === 0 ? 'pass' : maxRun < 3 ? 'amber' : 'fail';
+    document.getElementById('gptRunVisual').innerHTML = gptRunMap.map(hit => `<div class="run-dot" style="background:${hit ? 'var(--red)' : 'var(--border2)'}"></div>`).join('');
+    document.getElementById('gptRunBadge').innerHTML = `<span class="badge ${runRisk}">${maxRun} max</span>`;
+    document.getElementById('gptRunDesc').textContent = `Max run below ${threshold.toFixed(3)}: ${maxRun} sentence(s). ${gptRunMap.filter(Boolean).length} total AI-side sentences.`;
+
+    const gptFlags = [];
+    if (flaggedWindows > 0) {
+      gptFlags.push(`Flagged windows: ${flaggedWindows}/${gptWins.length}.`);
+    }
+    if (maxRun >= 3) {
+      gptFlags.push(`Consecutive run risk: ${maxRun} sentences in a row below the paper cutoff.`);
+    }
+    if (typeof data.ai_sentence_count === 'number' && data.ai_sentence_count > 0) {
+      gptFlags.push(`AI-side sentences: ${data.ai_sentence_count} below ${threshold.toFixed(3)}.`);
+    }
+    if (typeof data.lowest_sentence_score === 'number') {
+      gptFlags.push(`Lowest sentence score: ${Number(data.lowest_sentence_score).toFixed(4)}.`);
+    }
+    const flagsRisk = gptFlags.length === 0 ? 'pass' : maxRun >= 3 || flaggedWindows > 0 ? 'fail' : 'amber';
+    document.getElementById('gptFlagsBadge').innerHTML = `<span class="badge ${flagsRisk}">${gptFlags.length === 0 ? 'clean' : gptFlags.length + ' flags'}</span>`;
+    document.getElementById('gptBinoFlags').innerHTML = gptFlags.length
+      ? gptFlags.map(flag => `<div class="stat-row"><span class="stat-k">${flag}</span><span class="stat-v">!</span></div>`).join('')
+      : '<div class="stat-row"><span class="stat-k">No local binoculars red flags detected.</span><span class="stat-v">OK</span></div>';
+    // ── LLM PATTERN ANALYSIS ────────────────────────────────────────────────
+    function looksLikeCitation(s) {
+      const t = (s || '').trim();
+      // "Author, F., Author2, J., ..." patterns
+      if (/^[A-Z][a-z]+,\s+[A-Z]\./.test(t)) return true;
+      // Six or more comma-separated fragments → likely a reference entry
+      if (t.split(',').length > 5) return true;
+      // DOI / URL
+      if (/https?:\/\/|doi\.org|doi:/i.test(t)) return true;
+      return false;
+    }
+
+    const rewriteTargets = results
+      .map(r => ({ ...r, binoValue: Number(r.bino) }))
+      .filter(r => Number.isFinite(r.binoValue) && r.binoValue < threshold && !looksLikeCitation(r.sentence))
+      .sort((a, b) => a.binoValue - b.binoValue)
+      .slice(0, 5);
+    const rewriteRisk = rewriteTargets.length === 0 ? 'pass' : rewriteTargets.length <= 2 ? 'amber' : 'fail';
+    document.getElementById('gptRewriteBadge').innerHTML = `<span class="badge ${rewriteRisk}">${rewriteTargets.length === 0 ? 'none' : rewriteTargets.length + ' targets'}</span>`;
+    document.getElementById('gptRewriteSuggestions').innerHTML = rewriteTargets.length
+      ? '<div class="stat-row"><span class="stat-k">Generating academic rewrites with the local model...</span><span class="stat-v">...</span></div>'
+      : '<div class="stat-row"><span class="stat-k">No AI-prone sentences fell below the local binoculars threshold.</span><span class="stat-v">OK</span></div>';
+
+    // ── LLM ANALYSE (pattern identification per flagged sentence) ──────────────
+    const analyseTargets = rewriteTargets.slice(0, 5);
+    if (analyseTargets.length) {
+      document.getElementById('gptAnalyseBadge').innerHTML =
+        `<span class="badge fail">${analyseTargets.length} flagged</span>`;
+      document.getElementById('gptAnalyseResults').innerHTML =
+        '<div class="stat-row"><span class="stat-k">Asking the model to identify AI writing patterns…</span><span class="stat-v">…</span></div>';
+      try {
+        const analyseData = await requestBinoAnalyse(
+          analyseTargets.map(r => r.sentence),
+          analyseTargets.map(r => r.binoValue)
+        );
+        const analyses = Array.isArray(analyseData.analyses) ? analyseData.analyses : [];
+        document.getElementById('gptAnalyseResults').innerHTML = analyses.length
+          ? analyses.map((item, i) => renderPatternCard(item, i, analyses.length)).join('')
+          : '<div class="stat-row"><span class="stat-k">The model did not return analysis for these sentences.</span><span class="stat-v">—</span></div>';
+        if (!analyses.length) {
+          document.getElementById('gptAnalyseBadge').innerHTML = '<span class="badge na">n/a</span>';
+        }
+      } catch (analyseErr) {
+        document.getElementById('gptAnalyseResults').innerHTML =
+          `<div class="stat-row"><span class="stat-k">${escapeHtml(analyseErr.message || 'Pattern analysis failed.')}</span><span class="stat-v">!</span></div>`;
+        document.getElementById('gptAnalyseBadge').innerHTML = '<span class="badge fail">error</span>';
+      }
+    } else {
+      document.getElementById('gptAnalyseBadge').innerHTML = '<span class="badge pass">clean</span>';
+      document.getElementById('gptAnalyseResults').innerHTML =
+        '<div class="stat-row"><span class="stat-k">No AI-flagged sentences to analyse.</span><span class="stat-v">OK</span></div>';
+    }
+
+    if (rewriteTargets.length) {
+      try {
+        const rewriteData = await requestBinoRewrites(rewriteTargets.map(item => item.sentence));
+        const suggestions = Array.isArray(rewriteData.rewrite_suggestions) ? rewriteData.rewrite_suggestions : [];
+        const activeSuggestions = suggestions.filter(item => !item.skipped);
+        document.getElementById('gptRewriteSuggestions').innerHTML = activeSuggestions.length
+          ? activeSuggestions.map((item, index) => {
+              const originalScore = Number(item.original_bino);
+              const rewrittenScore = Number(item.rewritten_bino);
+              const hasRewrite = typeof item.rewritten_sentence === 'string' && item.rewritten_sentence.trim();
+              const badgeClass = hasRewrite
+                ? (item.passes_threshold ? 'pass' : item.improved ? 'amber' : 'fail')
+                : 'na';
+              const badgeLabel = hasRewrite
+                ? (item.passes_threshold ? 'passes threshold' : item.improved ? 'improved' : 'still low')
+                : 'no rewrite';
+              return `<div style="padding:12px 0;border-bottom:${index === activeSuggestions.length - 1 ? 'none' : '1px solid var(--border)'}">
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px">
+                  <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">Target ${index + 1}</div>
+                  <div class="badge ${badgeClass}">${badgeLabel}</div>
+                </div>
+                <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:4px">Original · bino score: ${Number.isFinite(originalScore) ? originalScore.toFixed(4) : 'n/a'}</div>
+                <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px;padding:8px 10px;border-left:2px solid var(--border2)">${escapeHtml(item.original_sentence || '')}</div>
+                ${renderRewriteSignals(item.original_sentence || '')}
+                <div style="font-size:11px;color:var(--amber);font-family:var(--mono);margin:10px 0 4px">Model rewrite · bino score: ${Number.isFinite(rewrittenScore) ? rewrittenScore.toFixed(4) : 'n/a'}${item.improved ? ' · ↑ improved' : ''}</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.6;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:10px 12px;margin-bottom:8px">${hasRewrite ? escapeHtml(item.rewritten_sentence) : 'The model could not produce a usable rewrite for this sentence.'}</div>
+                ${hasRewrite ? renderRewriteSignals(item.rewritten_sentence) : ''}
+              </div>`;
+            }).join('')
+          : '<div class="stat-row"><span class="stat-k">No usable rewrites were generated for the current targets.</span><span class="stat-v">n/a</span></div>';
+      } catch (rewriteError) {
+        document.getElementById('gptRewriteSuggestions').innerHTML =
+          `<div class="stat-row"><span class="stat-k">${escapeHtml(rewriteError.message || 'Rewrite generation failed.')} Restart the backend if it is still serving an older build without \`/rewrite-suggestions\`.</span><span class="stat-v">!</span></div>`;
+      }
+    }
+
     let note = `<strong>Local binoculars score: ${avgBino.toFixed(4)}</strong> — `;
     note += isAI
-      ? `Below the displayed threshold (${threshold}).`
-      : `Above the displayed threshold (${threshold}).`;
+      ? `Below the AI threshold (${threshold.toFixed(2)}).`
+      : avgBino < borderlineCeiling
+        ? `Above the AI threshold (${threshold.toFixed(2)}) but still in the borderline band (${borderlineCeiling.toFixed(2)} ceiling).`
+        : `Above the paper-style threshold (${threshold.toFixed(2)}).`;
     note += ` Scored ${data.scored_sentence_count || results.length} of ${data.sentence_count || results.length} sentences.`;
+    if (typeof data.ai_sentence_count === 'number') {
+      note += ` ${data.ai_sentence_count} sentence(s) fell below the AI threshold`;
+      if (typeof data.lowest_window_score === 'number' && typeof data.window_size === 'number') {
+        note += `; weakest ${data.window_size}-sentence window: ${Number(data.lowest_window_score).toFixed(4)}.`;
+      } else {
+        note += '.';
+      }
+    }
     note += ` Observer: ${data.observer_model}. Performer: ${data.performer_model}.`;
     if (data.device) note += ` Device: ${data.device}${data.dtype ? ' · ' + data.dtype : ''}.`;
     if (Array.isArray(data.notes) && data.notes.length) {

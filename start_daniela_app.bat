@@ -27,7 +27,7 @@ if errorlevel 1 (
     set "PYTHON_CMD=py -3"
 )
 
->render-config.js echo window.BINO_BACKEND_URL = '';
+>render-config.js echo window.BINO_BACKEND_URL = 'http://%BINO_HOST%:%BINO_PORT%';
 
 echo Starting backend on http://%BINO_HOST%:%BINO_PORT% ...
 start "Daniela Backend" cmd /k %PYTHON_CMD% -m uvicorn daniela_bino_backend:app --host %BINO_HOST% --port %BINO_PORT%
