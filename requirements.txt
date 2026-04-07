@@ -1,7 +1,8 @@
-# torch is installed separately in the Render build command using the CPU-only index:
-#   pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
-# For local dev, install torch normally: pip install torch==2.6.0
-torch==2.6.0
+# torch: install separately so pip picks the right CPU build for your Python version
+# For local dev (Python 3.10–3.13):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Render build command already handles this automatically.
+torch>=2.6.0
 fastapi==0.115.12
 uvicorn[standard]==0.34.0
 transformers==4.51.3
