@@ -1,8 +1,14 @@
-# torch: install separately so pip picks the right CPU build for your Python version
-# For local dev (Python 3.10–3.13):
+# torch is NOT listed here — install it first (version depends on your Python):
+#
+# Python 3.10–3.13 (recommended; matches Render deploy):
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
-# Render build command already handles this automatically.
-torch>=2.6.0
+#
+# Python 3.14+ (torch 2.6 is unavailable; PyPI only has 2.9+):
+#   pip install torch
+#
+# Then install the rest:
+#   pip install -r requirements.txt
+
 fastapi==0.115.12
 uvicorn[standard]==0.34.0
 transformers==4.51.3
